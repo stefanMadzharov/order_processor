@@ -1,0 +1,10 @@
+[package]
+name = "alex_program"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.41"
+rayon = "1.10.0"
+regex = "1.11.1"
+xlsxwriter = "0.6.1"

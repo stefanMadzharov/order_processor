@@ -1,0 +1,6 @@
+/target
+/Archive test
+
+.DS_Store
+*.xlsx
+*.zip

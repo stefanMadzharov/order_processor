@@ -1,8 +1,8 @@
-use crate::order::Order;
+use crate::sticker::Sticker;
 use chrono::Local;
 use xlsxwriter::*;
 
-fn _write_to_excel(orders: &[Order]) -> Result<(), XlsxError> {
+fn _write_to_excel(orders: &[Sticker]) -> Result<(), XlsxError> {
     let date_str = Local::now().format("%y_%m_%d").to_string();
     let filename = format!("{}_orders.xlsx", date_str);
 

@@ -1,4 +1,4 @@
-pub struct Order {
+pub struct Sticker {
     pub code: String,
     pub description: String,
     pub dimensions: Vec<String>,
@@ -8,7 +8,7 @@ pub struct Order {
     pub full_name: String,
 }
 
-impl Order {
+impl Sticker {
     pub fn new(
         code: &str,
         description: &str,
@@ -17,8 +17,8 @@ impl Order {
         text_color: &str,
         double_sticker: bool,
         full_name: String,
-    ) -> Order {
-        Order {
+    ) -> Sticker {
+        Sticker {
             code: code.to_owned(),
             description: description.to_owned(),
             dimensions,
@@ -30,7 +30,39 @@ impl Order {
     }
 }
 
-impl std::fmt::Display for Order {
+impl std::fmt::Display for Sticker {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        let dims_str = if self.double_sticker {
+            self.dimensions
+                .iter()
+                .enumerate()
+                .map(|(i, d)| format!("{} - {}", i + 1, d))
+                .collect::<Vec<_>>()
+                .join(", ")
+        } else {
+            self.dimensions
+                .first()
+                .cloned()
+                .unwrap_or_else(|| "N/A".to_string())
+        };
+
+        if self.double_sticker {
+            write!(
+            f,
+            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Double Sticker: {}",
+            self.code, self.description, dims_str, self.material, self.text_color, self.double_sticker
+        )
+        } else {
+            write!(
+                f,
+                "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}",
+                self.code, self.description, dims_str, self.material, self.text_color,
+            )
+        }
+    }
+}
+
+impl std::fmt::Debug for Sticker {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         let dims_str = if self.double_sticker {
             self.dimensions

@@ -15,7 +15,8 @@ fn get_cdr_prefixes_recursively(dir: &Path) -> Vec<String> {
                     if ext.eq_ignore_ascii_case("cdr") {
                         if let Some(file_stem) = entry_path.file_stem().and_then(|s| s.to_str()) {
                             if !file_stem.to_owned().to_lowercase().contains("backup") {
-                                prefixes.push(file_stem.to_string());
+                                prefixes
+                                    .push(file_stem.to_string().to_uppercase().replace(" _", "_"));
                             }
                         }
                     }
@@ -31,11 +32,13 @@ fn get_cdr_prefixes_recursively(dir: &Path) -> Vec<String> {
 fn main() {
     let configs = configs::Configs::load_from_file("configs.txt");
 
-    let file_names = get_cdr_prefixes_recursively(&configs.archive);
-    println!("File names: {:?}", file_names.len());
+    let mut file_names = get_cdr_prefixes_recursively(&configs.archive);
+    file_names.sort();
+    // println!("File names: {:?}", file_names.len());
+    // file_names.iter().for_each(|name| println!("{name}"));
 
     let parsed_orders = parser::parse_names(&*file_names);
-    println!("Parsed orders: {:?}", parsed_orders.len());
+    // println!("Parsed orders: {:?}", parsed_orders.len());
 
     for result in parsed_orders {
         match result {

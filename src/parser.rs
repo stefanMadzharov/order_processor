@@ -2,7 +2,7 @@ use crate::order::Order;
 use rayon::prelude::*;
 use regex::Regex;
 
-pub fn parse_names(names: &[&str]) -> Vec<Order> {
+pub fn parse_names(names: &[String]) -> Vec<Order> {
     let re = Regex::new(r"^(\d+)_(.+?)_((?:\d+x\d+(?:_\d+x\d+)*))").unwrap();
     let material_re = Regex::new(r"(PVC(?:_R)?|paper(?: [a-z]+)?)").unwrap();
 
@@ -40,6 +40,7 @@ pub fn parse_names(names: &[&str]) -> Vec<Order> {
                 material,
                 color,
                 double_sticker,
+                name.clone(),
             ))
         })
         .collect()

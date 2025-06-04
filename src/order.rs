@@ -3,8 +3,9 @@ pub struct Order {
     pub description: String,
     pub dimensions: Vec<String>,
     pub material: String,
-    pub color: String,
+    pub text_color: String,
     pub double_sticker: bool,
+    pub full_name: String,
 }
 
 impl Order {
@@ -13,16 +14,18 @@ impl Order {
         description: &str,
         dimensions: Vec<String>,
         material: &str,
-        color: &str,
+        text_color: &str,
         double_sticker: bool,
+        full_name: String,
     ) -> Order {
         Order {
             code: code.to_owned(),
             description: description.to_owned(),
             dimensions,
             material: material.to_owned(),
-            color: color.to_owned(),
+            text_color: text_color.to_owned(),
             double_sticker,
+            full_name,
         }
     }
 }
@@ -46,14 +49,20 @@ impl std::fmt::Display for Order {
         if self.double_sticker {
             write!(
             f,
-            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Double Sticker: {}",
-            self.code, self.description, dims_str, self.material, self.color, self.double_sticker
+            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Double Sticker: {}, Full Name: {}",
+            self.code, self.description, dims_str, self.material, self.text_color, self.double_sticker, self.full_name,
+
         )
         } else {
             write!(
                 f,
-                "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}",
-                self.code, self.description, dims_str, self.material, self.color,
+                "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Full Name: {}",
+                self.code,
+                self.description,
+                dims_str,
+                self.material,
+                self.text_color,
+                self.full_name,
             )
         }
     }

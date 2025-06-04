@@ -45,7 +45,7 @@ fn _write_to_excel(orders: &[Order]) -> Result<(), XlsxError> {
         sheet.write_string((row + 1) as u32, 1, &order.description, None)?;
         sheet.write_string((row + 1) as u32, 2, &dims, None)?;
         sheet.write_string((row + 1) as u32, 3, &order.material, None)?;
-        sheet.write_string((row + 1) as u32, 4, &order.color, None)?;
+        sheet.write_string((row + 1) as u32, 4, &order.text_color, None)?;
         sheet.write_boolean((row + 1) as u32, 5, order.double_sticker, None)?;
     }
 

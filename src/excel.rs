@@ -1,23 +1,36 @@
 use crate::sticker::{Color, Material, Sticker};
 use chrono::Local;
+use xlsxwriter::prelude::*;
 use xlsxwriter::*;
 
 pub fn write_table(stickers: &[Sticker]) -> Result<(), XlsxError> {
     let date_str = Local::now().format("%y_%m_%d").to_string();
     let filename = format!("{}_orders.xlsx", date_str);
 
-    let workbook = Workbook::new(&filename).unwrap();
+    let workbook = Workbook::new(&filename)?;
     let mut sheet = workbook.add_worksheet(None)?;
 
-    // Headers
     let headers = ["code", "description", "dimensions", "material"];
+    let mut col_widths = vec![
+        headers[0].len(),
+        headers[1].len(),
+        headers[2].len(),
+        headers[3].len(),
+    ];
 
+    // Define base cell format with borders
+    let mut base_format = Format::new();
+    base_format.set_border(FormatBorder::Thin);
+
+    // Write headers
     for (i, header) in headers.iter().enumerate() {
-        sheet.write_string(0, i as u16, header, None)?;
+        sheet.write_string(0, i as u16, header, Some(&base_format))?;
     }
 
-    // Data
-    for (row, sticker) in stickers.iter().enumerate() {
+    // Write data rows
+    for (row_idx, sticker) in stickers.iter().enumerate() {
+        let row = (row_idx + 1) as u32;
+
         let dims = if sticker.dimensions.len() > 1 {
             sticker
                 .dimensions
@@ -34,20 +47,38 @@ pub fn write_table(stickers: &[Sticker]) -> Result<(), XlsxError> {
                 .unwrap_or_else(|| "N/A".to_string())
         };
 
-        sheet.write_string((row + 1) as u32, 0, &sticker.code.to_string(), None)?;
-        sheet.write_string((row + 1) as u32, 1, &sticker.description, None)?;
-        sheet.write_string(
-            (row + 1) as u32,
-            2,
-            &dims,
-            Some(&sticker.text_color.clone().into()),
-        )?;
-        sheet.write_string(
-            (row + 1) as u32,
-            3,
-            &sticker.material.to_string(),
-            Some(&sticker.material.clone().into()),
-        )?;
+        let values = [
+            sticker.code.to_string(),
+            sticker.description.clone(),
+            dims,
+            sticker.material.to_string(),
+        ];
+
+        for (col, value) in values.iter().enumerate() {
+            let format = match col {
+                2 => {
+                    let mut f = Format::from(sticker.text_color.clone());
+                    f.set_border(FormatBorder::Thin);
+                    f
+                }
+                3 => {
+                    let mut f = Format::from(sticker.material.clone());
+                    f.set_border(FormatBorder::Thin);
+                    f
+                }
+                _ => base_format.clone(),
+            };
+
+            sheet.write_string(row, col as u16, value, Some(&format))?;
+
+            // Track maximum width for column
+            col_widths[col] = col_widths[col].max(value.len());
+        }
+    }
+
+    // Set column widths (add padding)
+    for (i, width) in col_widths.iter().enumerate() {
+        sheet.set_column(i as u16, i as u16, *width as f64 + 2.0, None)?;
     }
 
     workbook.close()?;

@@ -1,7 +1,7 @@
 use either::Either;
 use itertools::Itertools;
 use order_processor::parser::ParseStickerError;
-use order_processor::{configs, parser, sticker::Sticker};
+use order_processor::{configs, excel, parser, sticker::Sticker};
 use std::fs;
 use std::path::Path;
 
@@ -64,16 +64,18 @@ fn main() {
     stickers.sort_by(|a, b| a.code.cmp(&b.code));
 
     println!("Parsed Stickers:");
-    for sticker in stickers {
+    for sticker in &stickers {
         println!("{sticker}");
     }
 
-    println!("\nUnparsed Errors:");
-    for error in unrecoverable_errors {
-        eprintln!("{}", error)
+    if unrecoverable_errors.len() > 1 {
+        println!("\nUnparsed Errors:");
+        for error in unrecoverable_errors {
+            eprintln!("{}", error)
+        }
     }
 
-    // if let Err(e) = write_to_excel(&orders) {
-    //     eprintln!("Failed to write Excel: {}", e);
-    // }
+    if let Err(e) = excel::write_table(&stickers) {
+        eprintln!("Failed to write Excel: {}", e);
+    }
 }

@@ -1,18 +1,19 @@
 use crate::sticker::Sticker;
 use rayon::prelude::*;
 use regex::Regex;
+use strsim::normalized_levenshtein;
 
-fn extract_code<'a>(name: &'a str, code_re: &Regex) -> Result<&'a str, ParseStickerError> {
+fn extract_code(name: &str) -> Result<&str, ParseStickerError> {
+    let code_re = Regex::new(r"^(\d{3,})").unwrap();
     code_re
         .captures(name)
         .and_then(|caps| caps.get(1).map(|m| m.as_str()))
         .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))
 }
 
-fn extract_dimensions_str<'a>(
-    name: &'a str,
-    dimensions_re: &Regex,
-) -> Result<&'a str, ParseStickerError> {
+fn extract_dimensions_str(name: &str) -> Result<&str, ParseStickerError> {
+    let dimensions_re = Regex::new(r"(\d+X\d+(?:_\d+X\d+)*)").unwrap();
+
     dimensions_re
         .captures(name)
         .and_then(|caps| caps.get(1).map(|m| m.as_str()))
@@ -82,42 +83,77 @@ fn extract_material_and_color(
         })
 }
 
-fn is_double_sticker(name: &str) -> bool {
-    name.to_lowercase().contains("dvoen")
+use std::str::FromStr;
+
+impl FromStr for Sticker {
+    type Err = ParseStickerError;
+
+    fn from_str(name: &str) -> Result<Self, Self::Err> {
+        let code = extract_code(name)?;
+        let dimensions_str = extract_dimensions_str(name)?;
+        let dimensions = extract_dimensions(dimensions_str)
+            .into_iter()
+            .map(|d| d.to_lowercase())
+            .collect();
+        let description = extract_description(name, code, dimensions_str)?;
+        let (material_result, color) = extract_material_and_color(name, dimensions_str);
+        let material = material_result?;
+
+        Ok(Sticker::new(
+            code,
+            &description,
+            dimensions,
+            &material,
+            &color,
+            name.to_string(), // Preserve original name
+        ))
+    }
 }
 
 pub fn parse_names(names: &[String]) -> Vec<Result<Sticker, ParseStickerError>> {
-    let code_re = Regex::new(r"^(\d{3,})").unwrap();
-    let dimensions_re = Regex::new(r"(\d+X\d+(?:_\d+X\d+)*)").unwrap();
-
-    names
-        .par_iter()
-        .map(|name| {
-            let code = extract_code(name, &code_re)?;
-            let dimensions_str = extract_dimensions_str(name, &dimensions_re)?;
-            let dimensions = extract_dimensions(dimensions_str)
-                .iter()
-                .map(|dimensions| dimensions.to_lowercase())
-                .collect();
-            let description = extract_description(name, code, dimensions_str)?;
-            let (material, color) = extract_material_and_color(name, dimensions_str);
-            let material = material?;
-            let double_sticker = is_double_sticker(name);
-
-            Ok(Sticker::new(
-                code,
-                &description,
-                dimensions,
-                &*material,
-                &*color,
-                double_sticker,
-                name.clone(),
-            ))
-        })
-        .collect()
+    names.par_iter().map(|name| name.parse()).collect()
 }
 
-#[derive(Debug)]
+pub fn try_infering_code_by_description_similiarity_measure(
+    error: ParseStickerError,
+    parsed_stickers: &Vec<Sticker>,
+) -> Result<Sticker, ParseStickerError> {
+    // TODO add different similarity measures?
+    match error {
+        ParseStickerError::MissingCode(name) => {
+            let dimensions_str = extract_dimensions_str(&name)?;
+
+            println!("{name}");
+
+            let error_description = name
+                .split_once(&dimensions_str)
+                .map(|(description, _)| description.trim_matches(['_', ' '].as_ref()).to_string())
+                .filter(|s| !s.is_empty())
+                .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))?;
+
+            let (i, _) = parsed_stickers
+                .iter()
+                .enumerate()
+                .map(|(i, sticker)| {
+                    let levenshtein =
+                        normalized_levenshtein(&error_description, &sticker.description).abs();
+                    println!(
+                        "Sim between {}, {} is {levenshtein}",
+                        &error_description, &sticker.description
+                    );
+                    (i, levenshtein)
+                })
+                .filter(|(_, levenshtein)| *levenshtein > 0.95)
+                .max_by_key(|(_, levensthein)| (levensthein * 100.0) as u32)
+                .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))?;
+
+            return (parsed_stickers[i].code.clone() + &name).parse();
+        }
+        _ => return Err(error),
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum ParseStickerError {
     MissingCode(String),
     MissingDescription(String),

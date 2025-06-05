@@ -4,7 +4,6 @@ pub struct Sticker {
     pub dimensions: Vec<String>,
     pub material: String,
     pub text_color: String,
-    pub double_sticker: bool,
     pub full_name: String,
 }
 
@@ -15,7 +14,6 @@ impl Sticker {
         dimensions: Vec<String>,
         material: &str,
         text_color: &str,
-        double_sticker: bool,
         full_name: String,
     ) -> Sticker {
         Sticker {
@@ -24,7 +22,6 @@ impl Sticker {
             dimensions,
             material: material.to_owned(),
             text_color: text_color.to_owned(),
-            double_sticker,
             full_name,
         }
     }
@@ -32,7 +29,7 @@ impl Sticker {
 
 impl std::fmt::Display for Sticker {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let dims_str = if self.double_sticker {
+        let dims_str = if self.dimensions.len() > 1 {
             self.dimensions
                 .iter()
                 .enumerate()
@@ -46,25 +43,17 @@ impl std::fmt::Display for Sticker {
                 .unwrap_or_else(|| "N/A".to_string())
         };
 
-        if self.double_sticker {
-            write!(
+        write!(
             f,
-            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Double Sticker: {}",
-            self.code, self.description, dims_str, self.material, self.text_color, self.double_sticker
+            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}",
+            self.code, self.description, dims_str, self.material, self.text_color,
         )
-        } else {
-            write!(
-                f,
-                "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}",
-                self.code, self.description, dims_str, self.material, self.text_color,
-            )
-        }
     }
 }
 
 impl std::fmt::Debug for Sticker {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let dims_str = if self.double_sticker {
+        let dims_str = if self.dimensions.len() > 1 {
             self.dimensions
                 .iter()
                 .enumerate()
@@ -78,24 +67,10 @@ impl std::fmt::Debug for Sticker {
                 .unwrap_or_else(|| "N/A".to_string())
         };
 
-        if self.double_sticker {
-            write!(
+        write!(
             f,
-            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Double Sticker: {}, Full Name: {}",
-            self.code, self.description, dims_str, self.material, self.text_color, self.double_sticker, self.full_name,
-
+            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Full Name: {}",
+            self.code, self.description, dims_str, self.material, self.text_color, self.full_name,
         )
-        } else {
-            write!(
-                f,
-                "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}, Full Name: {}",
-                self.code,
-                self.description,
-                dims_str,
-                self.material,
-                self.text_color,
-                self.full_name,
-            )
-        }
     }
 }

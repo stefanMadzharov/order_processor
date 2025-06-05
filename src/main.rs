@@ -1,4 +1,7 @@
-use order_processor::{configs, parser};
+use either::Either;
+use itertools::Itertools;
+use order_processor::parser::ParseStickerError;
+use order_processor::{configs, parser, sticker::Sticker};
 use std::fs;
 use std::path::Path;
 
@@ -32,19 +35,42 @@ fn get_cdr_prefixes_recursively(dir: &Path) -> Vec<String> {
 fn main() {
     let configs = configs::Configs::load_from_file("configs.txt");
 
-    let mut file_names = get_cdr_prefixes_recursively(&configs.archive);
-    file_names.sort();
-    // println!("File names: {:?}", file_names.len());
-    // file_names.iter().for_each(|name| println!("{name}"));
+    let file_names = get_cdr_prefixes_recursively(&configs.archive);
 
-    let parsed_orders = parser::parse_names(&*file_names);
-    // println!("Parsed orders: {:?}", parsed_orders.len());
+    let parsed_names = parser::parse_names(&*file_names);
 
-    for result in parsed_orders {
-        match result {
-            Ok(order) => println!("Parsed: {}", order),
-            Err(e) => eprintln!("Error: {}", e),
+    let (mut stickers, errors): (Vec<Sticker>, Vec<ParseStickerError>) =
+        parsed_names.into_iter().partition_map(|res| match res {
+            Ok(sticker) => Either::Left(sticker),
+            Err(error) => Either::Right(error),
+        });
+
+    let mut unrecoverable_errors = vec![];
+    for error in errors {
+        if let ParseStickerError::MissingCode(_) = error {
+            match parser::try_infering_code_by_description_similiarity_measure(error, &stickers) {
+                Ok(sticker) => {
+                    stickers.push(sticker);
+                }
+                Err(error) => {
+                    unrecoverable_errors.push(error);
+                }
+            }
+        } else {
+            unrecoverable_errors.push(error);
         }
+    }
+
+    stickers.sort_by(|a, b| a.code.cmp(&b.code));
+
+    println!("Parsed Stickers:");
+    for sticker in stickers {
+        println!("{sticker}");
+    }
+
+    println!("\nUnparsed Errors:");
+    for error in unrecoverable_errors {
+        eprintln!("{}", error)
     }
 
     // if let Err(e) = write_to_excel(&orders) {

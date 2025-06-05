@@ -25,7 +25,7 @@ fn _write_to_excel(orders: &[Sticker]) -> Result<(), XlsxError> {
 
     // Data
     for (row, order) in orders.iter().enumerate() {
-        let dims = if order.double_sticker {
+        let dims = if order.dimensions.len() > 1 {
             order
                 .dimensions
                 .iter()
@@ -46,7 +46,6 @@ fn _write_to_excel(orders: &[Sticker]) -> Result<(), XlsxError> {
         sheet.write_string((row + 1) as u32, 2, &dims, None)?;
         sheet.write_string((row + 1) as u32, 3, &order.material, None)?;
         sheet.write_string((row + 1) as u32, 4, &order.text_color, None)?;
-        sheet.write_boolean((row + 1) as u32, 5, order.double_sticker, None)?;
     }
 
     workbook.close()?;

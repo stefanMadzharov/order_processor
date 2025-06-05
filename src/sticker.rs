@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct Sticker {
     pub code: u64,
     pub description: String,
@@ -29,6 +29,18 @@ impl Sticker {
             full_name,
         }
     }
+
+    pub fn split(&self) -> Vec<Self> {
+        self.clone()
+            .dimensions
+            .into_iter()
+            .map(|sub_sticker_dims| {
+                let mut substicker = self.clone();
+                substicker.dimensions = vec![sub_sticker_dims];
+                substicker
+            })
+            .collect()
+    }
 }
 
 impl std::fmt::Display for Sticker {
@@ -55,7 +67,17 @@ impl std::fmt::Display for Sticker {
     }
 }
 
-#[derive(Debug, Clone)]
+impl PartialEq for Sticker {
+    fn eq(&self, other: &Self) -> bool {
+        self.code == other.code
+            && self.description == other.description
+            && self.dimensions == other.dimensions
+            && self.material == other.material
+            && self.text_color == other.text_color
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Material {
     Paper,
     PaperGR,
@@ -77,7 +99,7 @@ impl std::fmt::Display for Material {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Color {
     Red,
     Green,

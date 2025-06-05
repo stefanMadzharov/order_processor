@@ -45,7 +45,7 @@ fn extract_material_and_color(
 ) -> (Result<String, ParseStickerError>, String) {
     // Regex for matching material and optional color
     let re = Regex::new(
-        r"(?i)(?P<material>paper(?:[_ ]GR)?|PVC(?:[_ ]R(?:[_ ]SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
+        r"(?i)(?P<material>paper(?:[_ ]GR[_ ])?|PVC(?:[_ ]R(?:[_ ]SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
     ).unwrap();
 
     name.split_once(dimensions_str)
@@ -143,7 +143,17 @@ impl FromStr for Sticker {
 }
 
 pub fn parse_names(names: &[String]) -> Vec<Result<Sticker, ParseStickerError>> {
-    names.par_iter().map(|name| name.parse()).collect()
+    names
+        .par_iter()
+        .flat_map(|name| {
+            let sticker_parse_result = name.parse::<Sticker>();
+            if let Ok(sticker) = &sticker_parse_result {
+                sticker.split().into_iter().map(Ok).collect()
+            } else {
+                vec![sticker_parse_result]
+            }
+        })
+        .collect()
 }
 
 pub fn try_infering_code_by_description_similiarity_measure(
@@ -154,8 +164,6 @@ pub fn try_infering_code_by_description_similiarity_measure(
     match error {
         ParseStickerError::MissingCode(name) => {
             let dimensions_str = extract_dimensions_str(&name)?;
-
-            println!("{name}");
 
             let error_description = name
                 .split_once(&dimensions_str)
@@ -169,10 +177,10 @@ pub fn try_infering_code_by_description_similiarity_measure(
                 .map(|(i, sticker)| {
                     let levenshtein =
                         normalized_levenshtein(&error_description, &sticker.description).abs();
-                    println!(
-                        "Sim between {}, {} is {levenshtein}",
-                        &error_description, &sticker.description
-                    );
+                    // println!(
+                    //     "Sim between {}, {} is {levenshtein}",
+                    //     &error_description, &sticker.description
+                    // );
                     (i, levenshtein)
                 })
                 .filter(|(_, levenshtein)| *levenshtein > 0.95)

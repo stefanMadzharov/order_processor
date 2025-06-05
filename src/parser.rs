@@ -1,4 +1,4 @@
-use crate::sticker::Sticker;
+use crate::sticker::{Color, Material, Sticker};
 use rayon::prelude::*;
 use regex::Regex;
 use strsim::normalized_levenshtein;
@@ -39,11 +39,31 @@ fn extract_description(
         .ok_or_else(|| ParseStickerError::MissingDescription(name.to_string()))
 }
 
+fn parse_material(mat: &str) -> Option<Material> {
+    match mat.to_lowercase().as_str() {
+        "paper" => Some(Material::Paper),
+        "paper gr" => Some(Material::PaperGR),
+        "pvc" => Some(Material::PVC),
+        "pvc r" => Some(Material::PVCR),
+        "pvc r slv" => Some(Material::PVCRSLV),
+        _ => None,
+    }
+}
+
+fn parse_color(color: &str) -> Option<Color> {
+    match color.to_lowercase().as_str() {
+        "black" | "blk" => Some(Color::Black),
+        "red" => Some(Color::Red),
+        "green" => Some(Color::Green),
+        "blue" => Some(Color::Blue),
+        _ => None,
+    }
+}
+
 fn extract_material_and_color(
     name: &str,
     dimensions_str: &str,
-) -> (Result<String, ParseStickerError>, String) {
-    // Regex for matching material and optional color
+) -> (Result<Material, ParseStickerError>, Color) {
     let re = Regex::new(
         r"(?i)(?P<material>paper(?: GR)?|PVC(?: R(?: SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
     ).unwrap();
@@ -53,32 +73,30 @@ fn extract_material_and_color(
             let end = end.trim_matches(['_', ' ']);
 
             if let Some(caps) = re.captures(end) {
-                let material = caps
-                    .name("material")
-                    .map(|m| m.as_str().to_lowercase())
+                let material_str = caps.name("material").map(|m| m.as_str()).unwrap_or("");
+                let color_str = caps.name("color").map(|c| c.as_str()).unwrap_or("black");
+
+                let material = parse_material(material_str)
                     .ok_or_else(|| ParseStickerError::MissingMaterial(name.to_string()));
 
-                let color = caps
-                    .name("color")
-                    .map(|c| c.as_str().to_uppercase())
-                    .unwrap_or_else(|| "BLACK".to_string());
+                let color = parse_color(color_str).unwrap_or(Color::Black);
 
                 (material, color)
             } else {
                 (
                     if name.contains("LEAFLET") {
-                        Ok("paper".to_string())
+                        Ok(Material::Paper)
                     } else {
                         Err(ParseStickerError::MissingMaterial(name.to_string()))
                     },
-                    "Black".to_string(),
+                    Color::Black,
                 )
             }
         })
         .unwrap_or_else(|| {
             (
                 Err(ParseStickerError::MissingMaterial(name.to_string())),
-                "Black".to_string(),
+                Color::Black,
             )
         })
 }
@@ -103,8 +121,8 @@ impl FromStr for Sticker {
             code,
             &description,
             dimensions,
-            &material,
-            &color,
+            material,
+            color,
             name.to_string(), // Preserve original name
         ))
     }
@@ -147,7 +165,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
                 .max_by_key(|(_, levensthein)| (levensthein * 100.0) as u32)
                 .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))?;
 
-            return (parsed_stickers[i].code.clone() + &name).parse();
+            return (parsed_stickers[i].code.clone().to_string() + &name).parse();
         }
         _ => return Err(error),
     }

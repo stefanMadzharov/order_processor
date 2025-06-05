@@ -41,11 +41,11 @@ fn _write_to_excel(orders: &[Sticker]) -> Result<(), XlsxError> {
                 .unwrap_or_else(|| "N/A".to_string())
         };
 
-        sheet.write_string((row + 1) as u32, 0, &order.code, None)?;
+        sheet.write_string((row + 1) as u32, 0, &order.code.to_string(), None)?;
         sheet.write_string((row + 1) as u32, 1, &order.description, None)?;
         sheet.write_string((row + 1) as u32, 2, &dims, None)?;
-        sheet.write_string((row + 1) as u32, 3, &order.material, None)?;
-        sheet.write_string((row + 1) as u32, 4, &order.text_color, None)?;
+        sheet.write_string((row + 1) as u32, 3, &order.material.to_string(), None)?;
+        sheet.write_string((row + 1) as u32, 4, &order.text_color.to_string(), None)?;
     }
 
     workbook.close()?;

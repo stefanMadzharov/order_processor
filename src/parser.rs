@@ -39,33 +39,13 @@ fn extract_description(
         .ok_or_else(|| ParseStickerError::MissingDescription(name.to_string()))
 }
 
-fn parse_material(mat: &str) -> Option<Material> {
-    match mat.to_lowercase().as_str() {
-        "paper" => Some(Material::Paper),
-        "paper gr" => Some(Material::PaperGR),
-        "pvc" => Some(Material::PVC),
-        "pvc r" => Some(Material::PVCR),
-        "pvc r slv" => Some(Material::PVCRSLV),
-        _ => None,
-    }
-}
-
-fn parse_color(color: &str) -> Option<Color> {
-    match color.to_lowercase().as_str() {
-        "black" | "blk" => Some(Color::Black),
-        "red" => Some(Color::Red),
-        "green" => Some(Color::Green),
-        "blue" => Some(Color::Blue),
-        _ => None,
-    }
-}
-
 fn extract_material_and_color(
     name: &str,
     dimensions_str: &str,
-) -> (Result<Material, ParseStickerError>, Color) {
+) -> (Result<String, ParseStickerError>, String) {
+    // Regex for matching material and optional color
     let re = Regex::new(
-        r"(?i)(?P<material>paper(?: GR)?|PVC(?: R(?: SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
+        r"(?i)(?P<material>paper(?:[_ ]GR)?|PVC(?:[_ ]R(?:[_ ]SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
     ).unwrap();
 
     name.split_once(dimensions_str)
@@ -73,35 +53,69 @@ fn extract_material_and_color(
             let end = end.trim_matches(['_', ' ']);
 
             if let Some(caps) = re.captures(end) {
-                let material_str = caps.name("material").map(|m| m.as_str()).unwrap_or("");
-                let color_str = caps.name("color").map(|c| c.as_str()).unwrap_or("black");
-
-                let material = parse_material(material_str)
+                let material = caps
+                    .name("material")
+                    .map(|m| m.as_str().to_owned())
                     .ok_or_else(|| ParseStickerError::MissingMaterial(name.to_string()));
 
-                let color = parse_color(color_str).unwrap_or(Color::Black);
+                let color = caps
+                    .name("color")
+                    .map(|c| c.as_str().to_owned())
+                    .unwrap_or_else(|| "BLACK".to_string());
 
                 (material, color)
             } else {
                 (
                     if name.contains("LEAFLET") {
-                        Ok(Material::Paper)
+                        Ok("paper".to_string())
                     } else {
                         Err(ParseStickerError::MissingMaterial(name.to_string()))
                     },
-                    Color::Black,
+                    "Black".to_string(),
                 )
             }
         })
         .unwrap_or_else(|| {
             (
                 Err(ParseStickerError::MissingMaterial(name.to_string())),
-                Color::Black,
+                "Black".to_string(),
             )
         })
 }
 
 use std::str::FromStr;
+
+impl FromStr for Color {
+    type Err = ParseStickerError;
+
+    fn from_str(color_string: &str) -> Result<Self, Self::Err> {
+        match color_string {
+            s if s.contains("RED") => Ok(Color::Red),
+            s if s.contains("GREEN") => Ok(Color::Green),
+            s if s.contains("BLUE") => Ok(Color::Blue),
+            s if s.contains("BLACK") || s.contains("BLK") => Ok(Color::Black),
+            _ => Err(ParseStickerError::UnknownColor(color_string.to_string())),
+        }
+    }
+}
+
+impl FromStr for Material {
+    type Err = ParseStickerError;
+
+    fn from_str(material_string: &str) -> Result<Self, Self::Err> {
+        match material_string {
+            s if s.contains("GR") => Ok(Material::PaperGR),
+            s if s.contains("PAP") => Ok(Material::Paper),
+            //-------------------------------------------------------------------------
+            s if s.contains("SLV") => Ok(Material::PVCRSLV),
+            s if s.contains("R") => Ok(Material::PVCR),
+            s if s.contains("PVC") => Ok(Material::PVC),
+            _ => Err(ParseStickerError::UnknownMaterial(
+                material_string.to_string(),
+            )),
+        }
+    }
+}
 
 impl FromStr for Sticker {
     type Err = ParseStickerError;
@@ -121,8 +135,8 @@ impl FromStr for Sticker {
             code,
             &description,
             dimensions,
-            material,
-            color,
+            material.parse()?,
+            color.parse()?,
             name.to_string(), // Preserve original name
         ))
     }
@@ -177,6 +191,8 @@ pub enum ParseStickerError {
     MissingDescription(String),
     MissingDimensions(String),
     MissingMaterial(String),
+    UnknownColor(String),
+    UnknownMaterial(String),
 }
 
 use std::fmt;
@@ -195,6 +211,12 @@ impl fmt::Display for ParseStickerError {
             }
             ParseStickerError::MissingMaterial(name) => {
                 write!(f, "Missing material in: {}", name)
+            }
+            ParseStickerError::UnknownColor(color_string) => {
+                write!(f, "Unknown color in: {}", color_string)
+            }
+            ParseStickerError::UnknownMaterial(material_string) => {
+                write!(f, "Unknown material in: {}", material_string)
             }
         }
     }

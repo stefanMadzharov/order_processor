@@ -67,8 +67,8 @@ pub enum Material {
 impl std::fmt::Display for Material {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let material_str = match self {
-            Material::Paper => "paper",
-            Material::PaperGR => "paper GR",
+            Material::Paper => "PAPER",
+            Material::PaperGR => "PAPER GR",
             Material::PVC => "PVC",
             Material::PVCR => "PVC R",
             Material::PVCRSLV => "PVC R SLV",

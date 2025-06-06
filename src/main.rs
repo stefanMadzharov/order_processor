@@ -71,38 +71,47 @@ fn main() {
     //     println!("{sticker}");
     // }
 
-    // if unrecoverable_errors.len() > 1 {
-    //     println!("\nUnparsed Errors:");
-    //     for error in unrecoverable_errors {
-    //         eprintln!("{}", error)
-    //     }
-    // }
+    if unrecoverable_errors.len() > 1 {
+        println!("\nUnparsed Errors:");
+        for error in unrecoverable_errors {
+            eprintln!("{}", error)
+        }
+    }
 
-    let mut code_to_orders_hashmap: HashMap<u64, Vec<Sticker>> = HashMap::new();
+    let mut code_to_stickers_hashmap: HashMap<u64, Vec<Sticker>> = HashMap::new();
 
     for sticker in &stickers {
-        code_to_orders_hashmap
+        code_to_stickers_hashmap
             .entry(sticker.code)
             .or_insert_with(Vec::new)
             .push(sticker.clone());
     }
 
-    for (key, vec) in &code_to_orders_hashmap {
-        if vec.len() > 1 {
-            println!("With {key} we have stickers:");
-            for sticker in vec {
-                println!("\t{sticker}");
-            }
-        }
-    }
+    let order_file_path = "./Test table.xlsx";
+    let orders = parse_orders(order_file_path)
+        .expect(("Couldn't parse order file".to_owned() + &order_file_path.to_owned()).as_str());
 
-    let orders = parse_orders("./test.xlsx");
-    dbg!(&orders);
-    for order in orders.unwrap() {
-        println!("{}-{}", order.0, order.1);
-    }
+    let available_orders: Vec<_> = orders
+        .iter()
+        .cloned()
+        .filter(|res| code_to_stickers_hashmap.contains_key(&res.0))
+        .collect();
 
-    if let Err(e) = excel::write_table(&stickers) {
+    // for (code, stickers) in &code_to_stickers_hashmap {
+    //     if stickers.len() > 1 {
+    //         println!("With code {code} we have:");
+    //         for sticker in stickers {
+    //             println!("{sticker}");
+    //         }
+    //     }
+    // }
+
+    if let Err(e) = excel::write_sizes_table(available_orders.as_slice(), &code_to_stickers_hashmap)
+    {
         eprintln!("Failed to write Excel: {}", e);
     }
+
+    let misses = orders
+        .into_iter()
+        .filter(|res| !code_to_stickers_hashmap.contains_key(&res.0));
 }

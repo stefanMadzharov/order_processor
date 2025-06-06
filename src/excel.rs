@@ -1,4 +1,4 @@
-use crate::sticker::{Color, Material, Sticker};
+use crate::sticker::{Color, Material, Order, Sticker};
 use calamine::{open_workbook_auto, Data, DataType, Reader};
 use chrono::Local;
 use std::collections::HashMap;
@@ -9,16 +9,18 @@ use xlsxwriter::*;
 type Coord = (usize, usize);
 
 /// Parse orders from an Excel file
-pub fn parse_orders(file_path: &str) -> Result<Vec<(u64, u64)>, Box<dyn Error>> {
+pub fn parse_orders(file_path: &str) -> Result<Vec<Order>, Box<dyn Error>> {
     let mut workbook = open_workbook_auto(&file_path)?;
     let range = workbook.worksheet_range("Sheet1")?;
 
     let cell1 = find_keyword_cell(&range, 6, 40, &["БГ СТИКЕР", "Френски код", "French code"])?;
     let cell2 = find_row_keyword_in_same_row(&range, cell1.0, 10, &["ПОРЪКА", "БРОЙ", "Order"])?;
+    let cell3 = find_row_keyword_in_same_row(&range, cell1.0, 10, &["Описание", "Description"])?;
 
-    let orders = extract_orders(&range, cell1.1, cell2.1, cell1.0)?;
+    let orders = extract_orders(&range, cell1.1, cell2.1, cell3.1, cell1.0)?;
     Ok(orders)
 }
+
 fn find_keyword_cell(
     range: &calamine::Range<Data>,
     max_cols: usize,
@@ -65,26 +67,39 @@ fn find_row_keyword_in_same_row(
 
 fn extract_orders(
     range: &calamine::Range<Data>,
-    col1: usize,
-    col2: usize,
+    col_code: usize,
+    col_amount: usize,
+    col_description: usize,
     start_row: usize,
-) -> Result<Vec<(u64, u64)>, Box<dyn Error>> {
+) -> Result<Vec<Order>, Box<dyn Error>> {
     let mut result = Vec::new();
     let mut started = false;
 
     for row in (start_row + 1)..range.height() {
-        let val1 = get_u64_from_cell(range.get((row, col1)));
+        let code_opt = get_u64_from_cell(range.get((row, col_code)));
 
-        match val1 {
-            Some(left) => {
-                // Start collecting once we hit the first valid value
+        match code_opt {
+            Some(code) => {
                 started = true;
-                let val2 = get_u64_from_cell(range.get((row, col2)))
-                    .ok_or_else(|| format!("Invalid value in cell2 at row {row}"))?;
-                result.push((left, val2));
+
+                let amount = get_u64_from_cell(range.get((row, col_amount)))
+                    .ok_or_else(|| format!("Invalid value in amount column at row {row}"))?;
+
+                let description = range
+                    .get((row, col_description))
+                    .and_then(|cell| cell.get_string())
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
+
+                result.push(Order {
+                    code,
+                    amount,
+                    descriptions: description,
+                });
             }
-            None if started => break, // We were collecting, but hit an invalid row: stop
-            None => continue,         // Skip blanks before the first valid match
+            None if started => break,
+            None => continue,
         }
     }
 

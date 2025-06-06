@@ -77,6 +77,13 @@ impl PartialEq for Sticker {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Order {
+    pub code: u64,
+    pub amount: u64,
+    pub descriptions: String,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Material {
     Paper,

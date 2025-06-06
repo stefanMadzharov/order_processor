@@ -93,9 +93,13 @@ fn main() {
 
     let available_orders: Vec<_> = orders
         .iter()
+        .filter(|order| code_to_stickers_hashmap.contains_key(&order.code))
         .cloned()
-        .filter(|res| code_to_stickers_hashmap.contains_key(&res.0))
         .collect();
+
+    for order in available_orders {
+        println!("{order:?}");
+    }
 
     // for (code, stickers) in &code_to_stickers_hashmap {
     //     if stickers.len() > 1 {
@@ -106,12 +110,12 @@ fn main() {
     //     }
     // }
 
-    if let Err(e) = excel::write_sizes_table(available_orders.as_slice(), &code_to_stickers_hashmap)
-    {
-        eprintln!("Failed to write Excel: {}", e);
-    }
+    // if let Err(e) = excel::write_sizes_table(available_orders.as_slice(), &code_to_stickers_hashmap)
+    // {
+    //     eprintln!("Failed to write Excel: {}", e);
+    // }
 
     let misses = orders
         .into_iter()
-        .filter(|res| !code_to_stickers_hashmap.contains_key(&res.0));
+        .filter(|order| !code_to_stickers_hashmap.contains_key(&order.code));
 }

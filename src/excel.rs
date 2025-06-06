@@ -69,18 +69,21 @@ fn extract_orders(
     start_row: usize,
 ) -> Result<Vec<(u64, u64)>, Box<dyn Error>> {
     let mut result = Vec::new();
+    let mut started = false;
 
     for row in (start_row + 1)..range.height() {
         let val1 = get_u64_from_cell(range.get((row, col1)));
-        if let Some(left) = val1 {
-            let val2 = get_u64_from_cell(range.get((row, col2)));
-            if let Some(right) = val2 {
-                result.push((left, right));
-            } else {
-                return Err(format!("Invalid value in cell2 at row {row}").into());
+
+        match val1 {
+            Some(left) => {
+                // Start collecting once we hit the first valid value
+                started = true;
+                let val2 = get_u64_from_cell(range.get((row, col2)))
+                    .ok_or_else(|| format!("Invalid value in cell2 at row {row}"))?;
+                result.push((left, val2));
             }
-        } else {
-            break; // stop if col1 cell doesn't match
+            None if started => break, // We were collecting, but hit an invalid row: stop
+            None => continue,         // Skip blanks before the first valid match
         }
     }
 

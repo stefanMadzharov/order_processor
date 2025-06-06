@@ -1,7 +1,100 @@
 use crate::sticker::{Color, Material, Sticker};
+use calamine::{open_workbook_auto, Data, DataType, Reader};
 use chrono::Local;
+use std::error::Error;
 use xlsxwriter::prelude::*;
 use xlsxwriter::*;
+
+type Coord = (usize, usize);
+
+/// Parse orders from an Excel file
+pub fn parse_orders(file_path: &str) -> Result<Vec<(u64, u64)>, Box<dyn Error>> {
+    let mut workbook = open_workbook_auto(&file_path)?;
+    let range = workbook.worksheet_range("Sheet1")?;
+
+    let cell1 = find_keyword_cell(&range, 6, 40, &["БГ СТИКЕР", "Френски код", "French code"])?;
+    let cell2 = find_row_keyword_in_same_row(&range, cell1.0, 10, &["ПОРЪКА", "БРОЙ", "Order"])?;
+
+    let orders = extract_orders(&range, cell1.1, cell2.1, cell1.0)?;
+    Ok(orders)
+}
+fn find_keyword_cell(
+    range: &calamine::Range<Data>,
+    max_cols: usize,
+    max_rows: usize,
+    keywords: &[&str],
+) -> Result<Coord, Box<dyn Error>> {
+    for row in 0..max_rows {
+        for col in 0..max_cols {
+            if let Some(val) = range.get((row, col)) {
+                if let Some(s) = val.get_string() {
+                    if keywords
+                        .iter()
+                        .any(|k| s.to_lowercase().contains(&k.to_lowercase()))
+                    {
+                        return Ok((row, col));
+                    }
+                }
+            }
+        }
+    }
+    Err("Keyword cell not found".into())
+}
+
+fn find_row_keyword_in_same_row(
+    range: &calamine::Range<Data>,
+    row: usize,
+    max_cols: usize,
+    keywords: &[&str],
+) -> Result<Coord, Box<dyn Error>> {
+    for col in 0..max_cols {
+        if let Some(val) = range.get((row, col)) {
+            if let Some(s) = val.get_string() {
+                if keywords
+                    .iter()
+                    .any(|k| s.to_lowercase().contains(&k.to_lowercase()))
+                {
+                    return Ok((row, col));
+                }
+            }
+        }
+    }
+    Err("Row keyword cell not found".into())
+}
+
+fn extract_orders(
+    range: &calamine::Range<Data>,
+    col1: usize,
+    col2: usize,
+    start_row: usize,
+) -> Result<Vec<(u64, u64)>, Box<dyn Error>> {
+    let mut result = Vec::new();
+
+    for row in (start_row + 1)..range.height() {
+        let val1 = get_u64_from_cell(range.get((row, col1)));
+        if let Some(left) = val1 {
+            let val2 = get_u64_from_cell(range.get((row, col2)));
+            if let Some(right) = val2 {
+                result.push((left, right));
+            } else {
+                return Err(format!("Invalid value in cell2 at row {row}").into());
+            }
+        } else {
+            break; // stop if col1 cell doesn't match
+        }
+    }
+
+    Ok(result)
+}
+
+fn get_u64_from_cell(cell: Option<&Data>) -> Option<u64> {
+    match cell {
+        Some(Data::Int(n)) => Some(*n as u64),
+        Some(Data::Float(f)) if *f >= 0.0 && f.fract() == 0.0 => Some(*f as u64),
+        Some(Data::String(s)) => s.trim().parse::<u64>().ok(),
+        _ => None,
+    }
+}
 
 pub fn write_table(stickers: &[Sticker]) -> Result<(), XlsxError> {
     let date_str = Local::now().format("%y_%m_%d").to_string();

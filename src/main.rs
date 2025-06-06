@@ -1,5 +1,6 @@
 use either::Either;
 use itertools::Itertools;
+use order_processor::excel::parse_orders;
 use order_processor::parser::ParseStickerError;
 use order_processor::{configs, excel, parser, sticker::Sticker};
 use std::collections::HashMap;
@@ -93,6 +94,12 @@ fn main() {
                 println!("\t{sticker}");
             }
         }
+    }
+
+    let orders = parse_orders("./test.xlsx");
+    dbg!(&orders);
+    for order in orders.unwrap() {
+        println!("{}-{}", order.0, order.1);
     }
 
     if let Err(e) = excel::write_table(&stickers) {

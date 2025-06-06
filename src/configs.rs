@@ -3,8 +3,8 @@ use std::io::{self, BufRead};
 use std::path::{Path, PathBuf};
 
 pub struct Configs {
-    pub archive: PathBuf,
-    pub order: PathBuf,
+    pub archive_path: PathBuf,
+    pub order_path: PathBuf,
 }
 
 impl Configs {
@@ -30,17 +30,24 @@ impl Configs {
             }
         }
 
-        let archive = archive_path.expect("Missing 'archive' key in config file");
-        let order = order_path.expect("Missing 'order' key in config file");
+        let archive_path = archive_path.expect("Missing 'archive' key in config file");
+        let order_path = order_path.expect("Missing 'order' key in config file");
 
-        if !archive.is_dir() {
-            panic!("'archive' path is not a valid directory: {:?}", archive);
+        if !archive_path.is_dir() {
+            panic!(
+                "'archive' path is not a valid directory: {:?}",
+                archive_path
+            );
         }
 
-        if !order.is_file() || order.extension().and_then(|e| e.to_str()) != Some("xlsx") {
-            panic!("'order' path is not a valid .xlsx file: {:?}", order);
+        if !order_path.is_file() || order_path.extension().and_then(|e| e.to_str()) != Some("xlsx")
+        {
+            panic!("'order' path is not a valid .xlsx file: {:?}", order_path);
         }
 
-        Configs { archive, order }
+        Configs {
+            archive_path,
+            order_path,
+        }
     }
 }

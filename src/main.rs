@@ -37,7 +37,7 @@ fn get_cdr_prefixes_recursively(dir: &Path) -> Vec<String> {
 fn main() {
     let configs = configs::Configs::load_from_file("configs.txt");
 
-    let file_names = get_cdr_prefixes_recursively(&configs.archive);
+    let file_names = get_cdr_prefixes_recursively(&configs.archive_path);
 
     let parsed_names = parser::parse_names(&*file_names);
 
@@ -87,19 +87,21 @@ fn main() {
             .push(sticker.clone());
     }
 
-    let order_file_path = "./Test table.xlsx";
-    let orders = parse_orders(order_file_path)
-        .expect(("Couldn't parse order file".to_owned() + &order_file_path.to_owned()).as_str());
+    let orders = parse_orders(configs.order_path.to_str().expect("order_path is invalid")).expect(
+        ("Couldn't parse order file".to_owned()
+            + &configs
+                .order_path
+                .to_str()
+                .expect("order_path is invalid")
+                .to_owned())
+            .as_str(),
+    );
 
     let available_orders: Vec<_> = orders
         .iter()
         .filter(|order| code_to_stickers_hashmap.contains_key(&order.code))
         .cloned()
         .collect();
-
-    for order in available_orders {
-        println!("{order:?}");
-    }
 
     // for (code, stickers) in &code_to_stickers_hashmap {
     //     if stickers.len() > 1 {
@@ -110,10 +112,10 @@ fn main() {
     //     }
     // }
 
-    // if let Err(e) = excel::write_sizes_table(available_orders.as_slice(), &code_to_stickers_hashmap)
-    // {
-    //     eprintln!("Failed to write Excel: {}", e);
-    // }
+    if let Err(e) = excel::write_sizes_table(available_orders.as_slice(), &code_to_stickers_hashmap)
+    {
+        eprintln!("Failed to write Excel: {}", e);
+    }
 
     let misses = orders
         .into_iter()

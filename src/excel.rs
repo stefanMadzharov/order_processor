@@ -116,7 +116,7 @@ fn get_u64_from_cell(cell: Option<&Data>) -> Option<u64> {
 }
 
 pub fn write_sizes_table(
-    orders: &[(u64, u64)],
+    orders: &[Order],
     code_to_stickers: &HashMap<u64, Vec<Sticker>>,
 ) -> Result<(), XlsxError> {
     let date_str = Local::now().format("%y_%m_%d").to_string();
@@ -144,8 +144,9 @@ pub fn write_sizes_table(
 
     let mut row = 1; // start from second row (first is header)
 
-    for (code, amount) in orders {
-        if let Some(stickers) = code_to_stickers.get(code) {
+    for order in orders {
+        let (code, amount) = (order.code, order.amount);
+        if let Some(stickers) = code_to_stickers.get(&code) {
             for sticker in stickers {
                 let dims = if sticker.dimensions.len() > 1 {
                     sticker

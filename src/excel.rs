@@ -92,7 +92,7 @@ impl From<Material> for Format {
         let color = match material {
             Material::PVC => format::FormatColor::Yellow,
             Material::PVCR => format::FormatColor::Orange,
-            Material::PVCRSLV => format::FormatColor::Purple,
+            Material::PVCRSLV => format::FormatColor::Magenta,
             _ => format::FormatColor::White,
         };
         format.set_bg_color(color);

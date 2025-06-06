@@ -2,6 +2,7 @@ use either::Either;
 use itertools::Itertools;
 use order_processor::parser::ParseStickerError;
 use order_processor::{configs, excel, parser, sticker::Sticker};
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
@@ -62,16 +63,35 @@ fn main() {
     }
 
     stickers.sort_by(|a, b| a.code.cmp(&b.code));
+    stickers.dedup();
 
-    println!("Parsed Stickers:");
+    // println!("Parsed Stickers:");
+    // for sticker in &stickers {
+    //     println!("{sticker}");
+    // }
+
+    // if unrecoverable_errors.len() > 1 {
+    //     println!("\nUnparsed Errors:");
+    //     for error in unrecoverable_errors {
+    //         eprintln!("{}", error)
+    //     }
+    // }
+
+    let mut code_to_orders_hashmap: HashMap<u64, Vec<Sticker>> = HashMap::new();
+
     for sticker in &stickers {
-        println!("{sticker}");
+        code_to_orders_hashmap
+            .entry(sticker.code)
+            .or_insert_with(Vec::new)
+            .push(sticker.clone());
     }
 
-    if unrecoverable_errors.len() > 1 {
-        println!("\nUnparsed Errors:");
-        for error in unrecoverable_errors {
-            eprintln!("{}", error)
+    for (key, vec) in &code_to_orders_hashmap {
+        if vec.len() > 1 {
+            println!("With {key} we have stickers:");
+            for sticker in vec {
+                println!("\t{sticker}");
+            }
         }
     }
 

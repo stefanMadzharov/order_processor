@@ -1,6 +1,5 @@
 use either::Either;
 use itertools::Itertools;
-use order_processor::excel::parse_orders;
 use order_processor::parser::ParseStickerError;
 use order_processor::{configs, excel, parser, sticker::Sticker};
 use std::collections::HashMap;
@@ -66,11 +65,6 @@ fn main() {
     stickers.sort_by(|a, b| a.code.cmp(&b.code));
     stickers.dedup();
 
-    // println!("Parsed Stickers:");
-    // for sticker in &stickers {
-    //     println!("{sticker}");
-    // }
-
     if unrecoverable_errors.len() > 1 {
         println!("\nUnparsed Errors:");
         for error in unrecoverable_errors {
@@ -87,37 +81,7 @@ fn main() {
             .push(sticker.clone());
     }
 
-    let orders = parse_orders(configs.order_path.to_str().expect("order_path is invalid")).expect(
-        ("Couldn't parse order file".to_owned()
-            + &configs
-                .order_path
-                .to_str()
-                .expect("order_path is invalid")
-                .to_owned())
-            .as_str(),
-    );
-
-    let available_orders: Vec<_> = orders
-        .iter()
-        .filter(|order| code_to_stickers_hashmap.contains_key(&order.code))
-        .cloned()
-        .collect();
-
-    // for (code, stickers) in &code_to_stickers_hashmap {
-    //     if stickers.len() > 1 {
-    //         println!("With code {code} we have:");
-    //         for sticker in stickers {
-    //             println!("{sticker}");
-    //         }
-    //     }
-    // }
-
-    if let Err(e) = excel::write_sizes_table(available_orders.as_slice(), &code_to_stickers_hashmap)
-    {
-        eprintln!("Failed to write Excel: {}", e);
+    if let Err(e) = excel::write_tables(configs.order_path, &code_to_stickers_hashmap) {
+        eprintln!("Failed to write tables: {e:?}");
     }
-
-    let misses = orders
-        .into_iter()
-        .filter(|order| !code_to_stickers_hashmap.contains_key(&order.code));
 }

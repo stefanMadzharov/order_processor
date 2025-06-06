@@ -116,37 +116,28 @@ fn get_u64_from_cell(cell: Option<&Data>) -> Option<u64> {
 }
 
 pub fn write_sizes_table(
+    workbook: &mut Workbook,
     orders: &[Order],
     code_to_stickers: &HashMap<u64, Vec<Sticker>>,
 ) -> Result<(), XlsxError> {
-    let date_str = Local::now().format("%y_%m_%d").to_string();
-    let filename = format!("{}_orders.xlsx", date_str);
+    let mut sheet = workbook.add_worksheet(Some("sizes"))?;
 
-    let workbook = Workbook::new(&filename)?;
-    let mut sheet = workbook.add_worksheet(None)?;
-
-    // Header row
-    let headers = ["code", "description", "dimensions", "material", "amount"];
+    let headers = ["code", "description", "material", "dimensions", "amount"];
     let mut col_widths = headers.iter().map(|h| h.len()).collect::<Vec<_>>();
 
-    // Base format with border
     let mut base_format = Format::new();
     base_format.set_border(FormatBorder::Thin);
 
-    // Orange format for amount column
     let mut amount_format = base_format.clone();
     amount_format.set_bg_color(FormatColor::Orange);
 
-    // Write headers
     for (col, header) in headers.iter().enumerate() {
         sheet.write_string(0, col as u16, header, Some(&base_format))?;
     }
 
-    let mut row = 1; // start from second row (first is header)
-
+    let mut row = 1;
     for order in orders {
-        let (code, amount) = (order.code, order.amount);
-        if let Some(stickers) = code_to_stickers.get(&code) {
+        if let Some(stickers) = code_to_stickers.get(&order.code) {
             for sticker in stickers {
                 let dims = if sticker.dimensions.len() > 1 {
                     sticker
@@ -167,30 +158,28 @@ pub fn write_sizes_table(
                 let values = [
                     sticker.code.to_string(),
                     sticker.description.clone(),
-                    dims,
                     sticker.material.to_string(),
-                    amount.to_string(),
+                    dims,
+                    order.amount.to_string(),
                 ];
 
                 for (col, value) in values.iter().enumerate() {
                     let format = match col {
                         2 => {
-                            let mut f = Format::from(sticker.text_color.clone());
-                            f.set_border(FormatBorder::Thin);
-                            f
-                        }
-                        3 => {
                             let mut f = Format::from(sticker.material.clone());
                             f.set_border(FormatBorder::Thin);
                             f
                         }
-                        4 => amount_format.clone(), // "amount" column
+                        3 => {
+                            let mut f = Format::from(sticker.text_color.clone());
+                            f.set_border(FormatBorder::Thin);
+                            f
+                        }
+                        4 => amount_format.clone(),
                         _ => base_format.clone(),
                     };
 
                     sheet.write_string(row, col as u16, value, Some(&format))?;
-
-                    // Track max width
                     col_widths[col] = col_widths[col].max(value.len());
                 }
 
@@ -199,13 +188,86 @@ pub fn write_sizes_table(
         }
     }
 
-    // Adjust column widths
     for (col, width) in col_widths.iter().enumerate() {
         sheet.set_column(col as u16, col as u16, *width as f64 + 2.0, None)?;
     }
 
-    workbook.close()?;
-    println!("Excel file written to: {}", filename);
+    Ok(())
+}
+
+pub fn write_missing_table(
+    workbook: &mut Workbook,
+    missing_orders: &[Order],
+    code_to_stickers: &HashMap<u64, Vec<Sticker>>,
+) -> Result<(), XlsxError> {
+    let mut sheet = workbook.add_worksheet(Some("missing"))?;
+
+    let headers = ["code", "description", "amount"];
+    let mut col_widths = headers.iter().map(|h| h.len()).collect::<Vec<_>>();
+
+    let mut base_format = Format::new();
+    base_format.set_border(FormatBorder::Thin);
+
+    let mut red_format = base_format.clone();
+    red_format.set_font_color(FormatColor::Red);
+
+    // Header row
+    for (col, header) in headers.iter().enumerate() {
+        sheet.write_string(0, col as u16, header, Some(&base_format))?;
+    }
+
+    let mut row = 1;
+    for order in missing_orders
+        .iter()
+        .filter(|o| !code_to_stickers.contains_key(&o.code))
+    {
+        let values = [
+            order.code.to_string(),
+            order.descriptions.clone(),
+            order.amount.to_string(),
+        ];
+
+        for (col, value) in values.iter().enumerate() {
+            sheet.write_string(row, col as u16, value, Some(&red_format))?;
+            col_widths[col] = col_widths[col].max(value.len());
+        }
+
+        row += 1;
+    }
+
+    for (col, width) in col_widths.iter().enumerate() {
+        sheet.set_column(col as u16, col as u16, *width as f64 + 2.0, None)?;
+    }
+
+    Ok(())
+}
+
+pub fn write_tables<P: AsRef<std::path::Path>>(
+    file_path: P,
+    code_to_stickers: &HashMap<u64, Vec<Sticker>>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let file_path_str = file_path.as_ref().to_str().ok_or("Invalid file path")?;
+
+    // Parse orders
+    let orders = parse_orders(file_path_str)?;
+
+    // Split available/missing
+    let (available_orders, missing_orders): (Vec<_>, Vec<_>) = orders
+        .into_iter()
+        .partition(|order| code_to_stickers.contains_key(&order.code));
+
+    let date_str = Local::now().format("%d_%m_%y").to_string();
+    let new_filename = format!("orders_{}.xlsx", date_str);
+    let new_path = std::path::PathBuf::from(&new_filename);
+
+    // Create new file
+    let mut workbook = Workbook::new(new_path.to_str().unwrap())?;
+
+    write_sizes_table(&mut workbook, &available_orders, code_to_stickers)?;
+    write_missing_table(&mut workbook, &missing_orders, code_to_stickers)?;
+
+    workbook.close()?; // only close once
+
     Ok(())
 }
 

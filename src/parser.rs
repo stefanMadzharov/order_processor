@@ -45,7 +45,7 @@ fn extract_material_and_color(
 ) -> (Result<String, ParseStickerError>, String) {
     // Regex for matching material and optional color
     let re = Regex::new(
-        r"(?i)(?P<material>paper(?:[_ ]GR[_ ])?|PVC(?:[_ ]R(?:[_ ]SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
+        r"(?i)(?P<material>paper(?:[_ (]GR[_ )])?|PVC(?:[_ ]R(?:[_ ]SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
     ).unwrap();
 
     name.split_once(dimensions_str)

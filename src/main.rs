@@ -62,15 +62,15 @@ fn main() {
         }
     }
 
-    stickers.sort_by(|a, b| a.code.cmp(&b.code));
-    stickers.dedup();
-
     if unrecoverable_errors.len() > 1 {
         println!("\nUnparsed Errors:");
         for error in unrecoverable_errors {
             eprintln!("{}", error)
         }
     }
+
+    stickers.sort_by(|a, b| a.code.cmp(&b.code));
+    stickers.dedup();
 
     let mut code_to_stickers_hashmap: HashMap<u64, Vec<Sticker>> = HashMap::new();
 

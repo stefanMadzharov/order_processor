@@ -12,7 +12,7 @@ fn extract_code(name: &str) -> Result<&str, ParseStickerError> {
 }
 
 fn extract_dimensions_str(name: &str) -> Result<&str, ParseStickerError> {
-    let dimensions_re = Regex::new(r"(\d+X\d+(?:_\d+X\d+)*)").unwrap();
+    let dimensions_re = Regex::new(r"(\d+X\d+(?:[_ ]\d+X\d+)*)").unwrap();
 
     dimensions_re
         .captures(name)

@@ -1,4 +1,7 @@
-use order_processor::sticker::{Color, Material, Sticker};
+use order_processor::{
+    parser,
+    sticker::{Color, Material, Sticker},
+};
 use std::str::FromStr;
 
 #[test]
@@ -278,4 +281,31 @@ fn test_273656() {
     assert_eq!(s.dimensions, vec!["40x60"]);
     assert_eq!(s.material, Material::PVC);
     assert_eq!(s.text_color, Color::Black);
+}
+
+#[test]
+fn test_multiple_dimensions() {
+    let stickers = parser::parse_names(
+        vec![
+            "205475_RF VITALFAN PROGR SINGLE 30K_58X75_36X73_10X320 130X450________PAPER GREEN_DVOEN STIKER_OK"
+                .to_owned(),
+        ]
+        .as_slice(),
+    );
+    for (i, s) in stickers.into_iter().enumerate() {
+        let s = s.unwrap();
+        assert_eq!(s.code, 205475);
+        println!("{s:?}");
+
+        match i {
+            0 => assert_eq!(s.dimensions, vec!["58x75"]),
+            1 => assert_eq!(s.dimensions, vec!["36x73"]),
+            2 => assert_eq!(s.dimensions, vec!["10x320"]),
+            3 => assert_eq!(s.dimensions, vec!["130x450"]),
+            _ => unreachable!(),
+        }
+
+        assert_eq!(s.material, Material::Paper);
+        assert_eq!(s.text_color, Color::Green);
+    }
 }

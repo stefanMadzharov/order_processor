@@ -175,15 +175,12 @@ pub fn try_infering_code_by_description_similiarity_measure(
                 .iter()
                 .enumerate()
                 .map(|(i, sticker)| {
-                    let levenshtein =
-                        normalized_levenshtein(&error_description, &sticker.description).abs();
-                    // println!(
-                    //     "Sim between {}, {} is {levenshtein}",
-                    //     &error_description, &sticker.description
-                    // );
-                    (i, levenshtein)
+                    (
+                        i,
+                        normalized_levenshtein(&error_description, &sticker.description).abs(),
+                    )
                 })
-                .filter(|(_, levenshtein)| *levenshtein > 0.95)
+                .filter(|(_, levenshtein)| *levenshtein >= 0.93)
                 .max_by_key(|(_, levensthein)| (levensthein * 100.0) as u32)
                 .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))?;
 

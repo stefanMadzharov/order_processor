@@ -1,5 +1,5 @@
 use order_processor::{
-    parser,
+    parser::{self, ParseStickerError},
     sticker::{Color, Material, Sticker},
 };
 use std::str::FromStr;
@@ -308,4 +308,75 @@ fn test_multiple_dimensions() {
         assert_eq!(s.material, Material::Paper);
         assert_eq!(s.text_color, Color::Green);
     }
+}
+
+#[test]
+fn test_infer_with_one_typo() {
+    let existing =
+        Sticker::from_str("234191_AV CLEAN GEL TUBE 200ML + RANDOM LENGHT_50X50_PVC_R_OK_PF")
+            .unwrap();
+    let error = ParseStickerError::MissingCode(
+        "AV CLEAN GEL TUBE 200ML + RANDOM LENGTH_60X60_PVC_R_OK_PF".into(),
+    );
+
+    let result =
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().code, 234191);
+}
+
+#[test]
+fn test_infer_with_missing_character() {
+    let existing =
+        Sticker::from_str("234191_AV CLEAN GEL TUBE 200ML + RANDOM LENGTH_50X50_PVC_R_OK_PF")
+            .unwrap();
+    let error = ParseStickerError::MissingCode(
+        "AV CLEAN GEL TUBE 200ML + RANDOM LENGT_70X40_PVC_R_OK_PF".into(),
+    );
+
+    let result =
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().code, 234191);
+}
+
+#[test]
+fn test_infer_with_character_swap() {
+    let existing =
+        Sticker::from_str("234191_AV CLEAN GEL TUBE 200ML + RANDOM LENGTH_50X50_PVC_R_OK_PF")
+            .unwrap();
+    let error = ParseStickerError::MissingCode(
+        "AV CLEAN GEL TUBE 200ML + RANDOM LENTGH_50X50_PVC_R_OK_PF".into(),
+    );
+
+    let result =
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().code, 234191);
+}
+
+#[test]
+fn test_fail_with_three_differences() {
+    let existing =
+        Sticker::from_str("234191_AV CLEAN GEL TUBE 200ML + RANDOM LENGTH_50X50_PVC_R_OK_PF")
+            .unwrap();
+    let error = ParseStickerError::MissingCode(
+        "AV CLEAN GEL TUBE 200ML + RANDO LENTG_50X50_PVC_R_OK_PF".into(),
+    );
+
+    let result =
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_fail_with_unrelated_description() {
+    let existing =
+        Sticker::from_str("234191_AV CLEAN GEL TUBE 200ML + RANDOM LENGTH_50X50_PVC_R_OK_PF")
+            .unwrap();
+    let error = ParseStickerError::MissingCode("FACE WASH FOAM FOR MEN_50X50_PVC_R_OK_PF".into());
+
+    let result =
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+    assert!(result.is_err());
 }

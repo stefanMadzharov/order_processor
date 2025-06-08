@@ -38,10 +38,10 @@ fn main() {
 
     let file_names = get_cdr_prefixes_recursively(&configs.archive_path);
 
-    let parsed_names = parser::parse_names(&*file_names);
+    let parsing_results = parser::parse_names(&*file_names);
 
     let (mut stickers, errors): (Vec<Sticker>, Vec<ParseStickerError>) =
-        parsed_names.into_iter().partition_map(|res| match res {
+        parsing_results.into_iter().partition_map(|res| match res {
             Ok(sticker) => Either::Left(sticker),
             Err(error) => Either::Right(error),
         });

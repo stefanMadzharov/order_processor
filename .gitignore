@@ -1,6 +1,8 @@
 /target
 /Archive test
+/CDR_BT
 
+configs.txt
 .DS_Store
 *.xlsx
 *.zip

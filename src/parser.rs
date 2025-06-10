@@ -12,7 +12,7 @@ fn extract_code(name: &str) -> Result<&str, ParseStickerError> {
 }
 
 fn extract_dimensions_str(name: &str) -> Result<&str, ParseStickerError> {
-    let dimensions_re = Regex::new(r"(\d+X\d+(?:[_ ]\d+X\d+)*)").unwrap();
+    let dimensions_re = Regex::new(r"(\d+[ХX]\d+(?:[_ ]\d+X\d+)*)").unwrap();
 
     dimensions_re
         .captures(name)
@@ -45,7 +45,7 @@ fn extract_material_and_color(
 ) -> (Result<String, ParseStickerError>, String) {
     // Regex for matching material and optional color
     let re = Regex::new(
-        r"(?i)(?P<material>paper(?:[_ (]GR[_ )])?|PVC(?:[_ ]R(?:[_ ]SLV)?)?|LEAFLET)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
+        r"(?i)(?P<material>paper(?:[_ (]GR[_ )])?|PVC(?:[_ ]R(?:[_ ]SLV)?)?|LEAFLET|PP)(?:[_ ]+(?P<color>BLK|BLACK|RED|GREEN|BLUE))?"
     ).unwrap();
 
     name.split_once(dimensions_str)
@@ -105,7 +105,7 @@ impl FromStr for Material {
     fn from_str(material_string: &str) -> Result<Self, Self::Err> {
         match material_string {
             s if s.contains("GR") => Ok(Material::PaperGR),
-            s if s.contains("PAP") => Ok(Material::Paper),
+            s if s.contains("PAP") | s.contains("PP")=> Ok(Material::Paper),
             //-------------------------------------------------------------------------
             s if s.contains("SLV") => Ok(Material::PVCRSLV),
             s if s.contains("R") => Ok(Material::PVCR),

@@ -1,2 +1,2 @@
-archive=./Archive test
+archive=./CDR_BT
 order=./Test table.xlsx

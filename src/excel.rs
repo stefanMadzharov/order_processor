@@ -129,7 +129,7 @@ pub fn write_sizes_table(
     base_format.set_border(FormatBorder::Thin);
 
     let mut amount_format = base_format.clone();
-    amount_format.set_bg_color(FormatColor::Orange);
+    amount_format.set_bg_color(FormatColor::Custom(0xFF_BF_00));
 
     for (col, header) in headers.iter().enumerate() {
         sheet.write_string(0, col as u16, header, Some(&base_format))?;
@@ -276,7 +276,7 @@ impl From<Material> for Format {
         let mut format = Format::new();
         let color = match material {
             Material::PVC => format::FormatColor::Yellow,
-            Material::PVCR => format::FormatColor::Orange,
+            Material::PVCR => format::FormatColor::Custom(0xFF_BF_00),
             Material::PVCRSLV => format::FormatColor::Magenta,
             _ => format::FormatColor::White,
         };
@@ -291,7 +291,7 @@ impl From<Color> for Format {
         let color = match material {
             Color::Black => format::FormatColor::Gray,
             Color::Green => format::FormatColor::Green,
-            Color::Blue => format::FormatColor::Blue,
+            Color::Blue => format::FormatColor::Custom(0x46_75_E6),
             Color::Red => format::FormatColor::Red,
         };
         format.set_bg_color(color);

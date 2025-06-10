@@ -81,7 +81,7 @@ impl PartialEq for Sticker {
 pub struct Order {
     pub code: u64,
     pub amount: u64,
-    pub descriptions: String,
+    pub description: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

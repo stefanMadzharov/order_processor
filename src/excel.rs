@@ -95,7 +95,7 @@ fn extract_orders(
                 result.push(Order {
                     code,
                     amount,
-                    descriptions: description,
+                    description,
                 });
             }
             None if started => break,
@@ -223,7 +223,7 @@ pub fn write_missing_table(
     {
         let values = [
             order.code.to_string(),
-            order.descriptions.clone(),
+            order.description.clone(),
             order.amount.to_string(),
         ];
 

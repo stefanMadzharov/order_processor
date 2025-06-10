@@ -6,6 +6,7 @@ pub struct Configs {
     pub archive_path: PathBuf,
     pub order_path: PathBuf,
     pub inferring_levenshtein_distance: f64,
+    pub error_output_levenshtein_distance: f64,
 }
 
 impl Configs {
@@ -18,6 +19,7 @@ impl Configs {
         let mut archive_path: Option<PathBuf> = None;
         let mut order_path: Option<PathBuf> = None;
         let mut inferring_levenshtein_distance: f64 = 0.93; // default value which corresponds to 1-2 edits
+        let mut error_output_levenshtein_distance: f64 = 0.80; // default value which corresponds to ~4 edits
 
         for line_result in reader.lines() {
             let line = line_result.expect("Failed to read line from config file");
@@ -29,6 +31,14 @@ impl Configs {
                     "order" => order_path = Some(PathBuf::from(value)),
                     "inferring_levenshtein_distance" => {
                         inferring_levenshtein_distance = value.parse().unwrap_or_else(|_| {
+                            panic!(
+                                "Invalid float for inferring_levenshtein_distance: {}",
+                                value
+                            )
+                        });
+                    }
+                    "error_output_levenshtein_distance" => {
+                        error_output_levenshtein_distance = value.parse().unwrap_or_else(|_| {
                             panic!(
                                 "Invalid float for inferring_levenshtein_distance: {}",
                                 value
@@ -56,15 +66,22 @@ impl Configs {
         }
 
         if inferring_levenshtein_distance == 0.93 {
-            println!("!!!WARNING: USING DEFAULT LEVENSHTEIN DISTANCE OF 0.93!!!");
+            println!("!!!WARNING: USING DEFAULT INFERRING LEVENSHTEIN DISTANCE OF 0.93!!!");
             println!("For custom value set in \'configs.txt\', e.g.");
             println!("inferring_levenshtein_distance=0.9")
+        }
+
+        if error_output_levenshtein_distance == 0.8 {
+            println!("!!!WARNING: USING DEFAULT ERROR LEVENSHTEIN DISTANCE OF 0.8!!!");
+            println!("For custom value set in \'configs.txt\', e.g.");
+            println!("error_output_levenshtein_distance=0.7")
         }
 
         Configs {
             archive_path,
             order_path,
             inferring_levenshtein_distance,
+            error_output_levenshtein_distance,
         }
     }
 }

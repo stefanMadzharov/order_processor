@@ -1,3 +1,4 @@
 archive=./CDR_BT
-order=./Test table.xlsx
-infering_levenshtein_distanc=0.93
+order=./test.xlsx
+inferring_levenshtein_distance=0.92
+error_output_levenshtein_distance=0.5

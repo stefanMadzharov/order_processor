@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 pub struct Configs {
     pub archive_path: PathBuf,
     pub order_path: PathBuf,
+    pub inferring_levenshtein_distance: f64,
 }
 
 impl Configs {
@@ -16,6 +17,7 @@ impl Configs {
 
         let mut archive_path: Option<PathBuf> = None;
         let mut order_path: Option<PathBuf> = None;
+        let mut inferring_levenshtein_distance: f64 = 0.93; // default value which corresponds to 1-2 edits
 
         for line_result in reader.lines() {
             let line = line_result.expect("Failed to read line from config file");
@@ -25,6 +27,14 @@ impl Configs {
                 match key {
                     "archive" => archive_path = Some(PathBuf::from(value)),
                     "order" => order_path = Some(PathBuf::from(value)),
+                    "inferring_levenshtein_distance" => {
+                        inferring_levenshtein_distance = value.parse().unwrap_or_else(|_| {
+                            panic!(
+                                "Invalid float for inferring_levenshtein_distance: {}",
+                                value
+                            )
+                        });
+                    }
                     _ => continue,
                 }
             }
@@ -45,9 +55,16 @@ impl Configs {
             panic!("'order' path is not a valid .xlsx file: {:?}", order_path);
         }
 
+        if inferring_levenshtein_distance == 0.93 {
+            println!("!!!WARNING: USING DEFAULT LEVENSHTEIN DISTANCE OF 0.93!!!");
+            println!("For custom value set in \'configs.txt\', e.g.");
+            println!("inferring_levenshtein_distance=0.9")
+        }
+
         Configs {
             archive_path,
             order_path,
+            inferring_levenshtein_distance,
         }
     }
 }

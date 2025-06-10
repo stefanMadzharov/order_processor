@@ -52,7 +52,11 @@ fn main() {
 
     for error in errors {
         if let ParseStickerError::MissingCode(_) = error {
-            match parser::try_infering_code_by_description_similiarity_measure(error, &stickers) {
+            match parser::try_infering_code_by_description_similiarity_measure(
+                error,
+                &stickers,
+                configs.inferring_levenshtein_distance,
+            ) {
                 Ok(similar_stickers) => {
                     for mut similar_sticker in similar_stickers {
                         similar_sticker.description =
@@ -71,7 +75,7 @@ fn main() {
     }
 
     if !unrecoverable_errors.is_empty() {
-        println!("\nUnparsed Errors:");
+        eprintln!("\nUnparsed Errors:");
         for error in unrecoverable_errors {
             eprintln!("{}", error)
         }

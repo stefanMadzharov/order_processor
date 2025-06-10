@@ -320,7 +320,7 @@ fn test_infer_with_one_typo() {
     );
 
     let result =
-        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing], 0.93);
     assert!(result.is_ok());
     assert_eq!(result.unwrap()[0].code, 234191);
 }
@@ -335,7 +335,7 @@ fn test_infer_with_missing_character() {
     );
 
     let result =
-        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing], 0.93);
     assert!(result.is_ok());
     assert_eq!(result.unwrap()[0].code, 234191);
 }
@@ -350,7 +350,7 @@ fn test_infer_with_character_swap() {
     );
 
     let result =
-        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing], 0.93);
     assert!(result.is_ok());
     assert_eq!(result.unwrap()[0].code, 234191);
 }
@@ -365,7 +365,7 @@ fn test_fail_with_three_differences() {
     );
 
     let result =
-        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing], 0.93);
     assert!(result.is_err());
 }
 
@@ -377,6 +377,6 @@ fn test_fail_with_unrelated_description() {
     let error = ParseStickerError::MissingCode("FACE WASH FOAM FOR MEN_50X50_PVC_R_OK_PF".into());
 
     let result =
-        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
+        parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing], 0.93);
     assert!(result.is_err());
 }

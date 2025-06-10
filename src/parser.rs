@@ -159,6 +159,7 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Sticker, ParseStickerError>> 
 pub fn try_infering_code_by_description_similiarity_measure(
     error: ParseStickerError,
     parsed_stickers: &Vec<Sticker>,
+    levenshtein_distance_bound: f64,
 ) -> Result<Vec<Sticker>, ParseStickerError> {
     // TODO add different similarity measures?
     match error {
@@ -180,7 +181,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
                         normalized_levenshtein(&error_description, &sticker.description).abs(),
                     )
                 })
-                .filter(|(_, levenshtein)| *levenshtein >= 0.93)
+                .filter(|(_, levenshtein)| *levenshtein >= levenshtein_distance_bound)
                 .filter_map(|(i, _)| {
                     (parsed_stickers[i].code.clone().to_string() + &name)
                         .parse()

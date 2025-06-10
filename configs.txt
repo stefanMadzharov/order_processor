@@ -1,2 +1,3 @@
 archive=./CDR_BT
 order=./Test table.xlsx
+infering_levenshtein_distanc=0.93

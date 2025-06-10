@@ -67,7 +67,7 @@ fn extract_material_and_color(
             } else {
                 (
                     if name.contains("LEAFLET") {
-                        Ok("PAPER".to_string())
+                        Ok("LEAFLET".to_string())
                     } else {
                         Err(ParseStickerError::MissingMaterial(name.to_string()))
                     },
@@ -106,6 +106,7 @@ impl FromStr for Material {
         match material_string {
             s if s.contains("GR") => Ok(Material::PaperGR),
             s if s.contains("PAP") | s.contains("PP") => Ok(Material::Paper),
+            s if s.contains("LEAFLET") => Ok(Material::LEAFLET),
             //-------------------------------------------------------------------------
             s if s.contains("SLV") => Ok(Material::PVCRSLV),
             s if s.contains("R") => Ok(Material::PVCR),

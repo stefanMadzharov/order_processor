@@ -91,6 +91,7 @@ pub enum Material {
     PVC,
     PVCR,
     PVCRSLV,
+    LEAFLET,
 }
 
 impl std::fmt::Display for Material {
@@ -101,6 +102,7 @@ impl std::fmt::Display for Material {
             Material::PVC => "PVC",
             Material::PVCR => "PVC R",
             Material::PVCRSLV => "PVC R SLV",
+            Material::LEAFLET => "LEAFLET",
         };
         write!(f, "{}", material_str)
     }

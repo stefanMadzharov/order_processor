@@ -65,13 +65,15 @@ fn print_errors(errors: &[ParseStickerError], configs: &configs::Configs) {
 
         if let Some(error_str) = maybe_error_str {
             for order in &orders {
-                let similarity = normalized_levenshtein(error_str, &order.description);
+                let similarity = normalized_levenshtein(&error_str, &order.description);
                 if similarity >= configs.error_output_levenshtein_distance {
                     eprintln!(
                         "Error: {}\n  ↳ Similar to Order: \"{}\" (similarity: {:.2})",
                         error, order.description, similarity
                     );
-                    break;
+                }
+                if error_str.contains(&order.code.to_string()) {
+                    eprintln!("Error: {error}");
                 }
             }
         }

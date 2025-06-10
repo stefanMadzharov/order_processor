@@ -322,7 +322,7 @@ fn test_infer_with_one_typo() {
     let result =
         parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap().code, 234191);
+    assert_eq!(result.unwrap()[0].code, 234191);
 }
 
 #[test]
@@ -337,7 +337,7 @@ fn test_infer_with_missing_character() {
     let result =
         parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap().code, 234191);
+    assert_eq!(result.unwrap()[0].code, 234191);
 }
 
 #[test]
@@ -352,7 +352,7 @@ fn test_infer_with_character_swap() {
     let result =
         parser::try_infering_code_by_description_similiarity_measure(error, &vec![existing]);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap().code, 234191);
+    assert_eq!(result.unwrap()[0].code, 234191);
 }
 
 #[test]

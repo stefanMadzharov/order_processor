@@ -18,7 +18,9 @@ fn get_cdr_prefixes_recursively(dir: &Path) -> Vec<String> {
                 } else if let Some(ext) = entry_path.extension() {
                     if ext.eq_ignore_ascii_case("cdr") {
                         if let Some(file_stem) = entry_path.file_stem().and_then(|s| s.to_str()) {
-                            if !file_stem.to_owned().to_lowercase().contains("backup") {
+                            if !file_stem.to_owned().to_uppercase().contains("BACKUP")
+                                && !file_stem.chars().take(1).contains(&'C')
+                            {
                                 prefixes
                                     .push(file_stem.to_string().to_uppercase().replace(" _", "_"));
                             }
@@ -47,13 +49,19 @@ fn main() {
         });
 
     let mut unrecoverable_errors = vec![];
+
     for error in errors {
         if let ParseStickerError::MissingCode(_) = error {
             match parser::try_infering_code_by_description_similiarity_measure(error, &stickers) {
-                Ok(sticker) => {
-                    stickers.push(sticker);
+                Ok(similar_stickers) => {
+                    for mut similar_sticker in similar_stickers {
+                        similar_sticker.description =
+                            similar_sticker.description + &" !!!INFERRED!!!".to_owned();
+                        stickers.push(similar_sticker);
+                    }
                 }
                 Err(error) => {
+                    // TODO output only similar names
                     unrecoverable_errors.push(error);
                 }
             }
@@ -62,7 +70,7 @@ fn main() {
         }
     }
 
-    if unrecoverable_errors.len() > 1 {
+    if !unrecoverable_errors.is_empty() {
         println!("\nUnparsed Errors:");
         for error in unrecoverable_errors {
             eprintln!("{}", error)

@@ -67,18 +67,18 @@ fn extract_material_and_color(
             } else {
                 (
                     if name.contains("LEAFLET") {
-                        Ok("paper".to_string())
+                        Ok("PAPER".to_string())
                     } else {
                         Err(ParseStickerError::MissingMaterial(name.to_string()))
                     },
-                    "Black".to_string(),
+                    "BLACK".to_string(),
                 )
             }
         })
         .unwrap_or_else(|| {
             (
                 Err(ParseStickerError::MissingMaterial(name.to_string())),
-                "Black".to_string(),
+                "BLACK".to_string(),
             )
         })
 }
@@ -105,7 +105,7 @@ impl FromStr for Material {
     fn from_str(material_string: &str) -> Result<Self, Self::Err> {
         match material_string {
             s if s.contains("GR") => Ok(Material::PaperGR),
-            s if s.contains("PAP") | s.contains("PP")=> Ok(Material::Paper),
+            s if s.contains("PAP") | s.contains("PP") => Ok(Material::Paper),
             //-------------------------------------------------------------------------
             s if s.contains("SLV") => Ok(Material::PVCRSLV),
             s if s.contains("R") => Ok(Material::PVCR),
@@ -159,7 +159,7 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Sticker, ParseStickerError>> 
 pub fn try_infering_code_by_description_similiarity_measure(
     error: ParseStickerError,
     parsed_stickers: &Vec<Sticker>,
-) -> Result<Sticker, ParseStickerError> {
+) -> Result<Vec<Sticker>, ParseStickerError> {
     // TODO add different similarity measures?
     match error {
         ParseStickerError::MissingCode(name) => {
@@ -171,7 +171,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
                 .filter(|s| !s.is_empty())
                 .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))?;
 
-            let (i, _) = parsed_stickers
+            let similar_stickers: Vec<Sticker> = parsed_stickers
                 .iter()
                 .enumerate()
                 .map(|(i, sticker)| {
@@ -181,10 +181,18 @@ pub fn try_infering_code_by_description_similiarity_measure(
                     )
                 })
                 .filter(|(_, levenshtein)| *levenshtein >= 0.93)
-                .max_by_key(|(_, levensthein)| (levensthein * 100.0) as u32)
-                .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))?;
+                .filter_map(|(i, _)| {
+                    (parsed_stickers[i].code.clone().to_string() + &name)
+                        .parse()
+                        .ok()
+                })
+                .collect();
 
-            return (parsed_stickers[i].code.clone().to_string() + &name).parse();
+            if similar_stickers.is_empty() {
+                Err(ParseStickerError::MissingCode(name.to_string()))
+            } else {
+                Ok(similar_stickers)
+            }
         }
         _ => return Err(error),
     }

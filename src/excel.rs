@@ -13,9 +13,20 @@ pub fn parse_orders(file_path: &str) -> Result<Vec<Order>, Box<dyn Error>> {
     let mut workbook = open_workbook_auto(&file_path)?;
     let range = workbook.worksheet_range("Sheet1")?;
 
-    let cell1 = find_keyword_cell(&range, 6, 40, &["БГ СТИКЕР", "Френски код", "French code"])?;
-    let cell2 = find_row_keyword_in_same_row(&range, cell1.0, 10, &["ПОРЪКА", "БРОЙ", "Order"])?;
-    let cell3 = find_row_keyword_in_same_row(&range, cell1.0, 10, &["Описание", "Description"])?;
+    let cell1 = find_keyword_cell(
+        &range,
+        6,
+        40,
+        &["БГ СТИКЕР", "Френски код", "French code", "Fr Code"],
+    )?;
+    let cell2 = find_row_keyword_in_same_row(
+        &range,
+        cell1.0,
+        10,
+        &["Поръчка", "Брой", "Order", "Total", "10/2025"],
+    )?;
+    let cell3 =
+        find_row_keyword_in_same_row(&range, cell1.0, 10, &["Описание", "Description", "Product"])?;
 
     let orders = extract_orders(&range, cell1.1, cell2.1, cell3.1, cell1.0)?;
     Ok(orders)

@@ -88,8 +88,8 @@ fn print_errors(errors: &[ParseStickerError], configs: &configs::Configs) {
                 if error_str.contains(&order.code.to_string()) {
                     let _ = writeln!(
                         &mut code_matches,
-                        "\t\t↳ Error contains code {}: \"{}\"",
-                        order.code, error_str
+                        "\t\t↳ Error contains code {}: \"{:?}\"",
+                        order.code, error
                     );
                 }
             }

@@ -63,9 +63,14 @@ impl Configs {
             );
         }
 
-        if !order_path.is_file() || order_path.extension().and_then(|e| e.to_str()) != Some("xlsx")
+        if !order_path.is_file()
+            || order_path.extension().and_then(|e| e.to_str()) != Some("xlsx")
+                && order_path.extension().and_then(|e| e.to_str()) != Some("xls")
         {
-            panic!("'order' path is not a valid .xlsx file: {:?}", order_path);
+            panic!(
+                "'order' path is not a valid excel file(\'.xlsx\', \'.xls\') file: {:?}",
+                order_path
+            );
         }
 
         if inferring_levenshtein_distance == DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE {

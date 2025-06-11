@@ -1,4 +1,4 @@
 archive=./CDR_BT
-order=./test.xlsx
+order=./kosmetika.xlsx
 inferring_levenshtein_distance=0.92
 error_output_levenshtein_distance=0.5

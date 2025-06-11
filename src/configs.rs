@@ -9,6 +9,9 @@ pub struct Configs {
     pub error_output_levenshtein_distance: f64,
 }
 
+const DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE: f64 = 0.93; // corresponds to 1-2 edits
+const DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE: f64 = 0.7;
+
 impl Configs {
     pub fn load_from_file<P: AsRef<Path>>(config_path: P) -> Self {
         let file = fs::File::open(&config_path)
@@ -18,8 +21,8 @@ impl Configs {
 
         let mut archive_path: Option<PathBuf> = None;
         let mut order_path: Option<PathBuf> = None;
-        let mut inferring_levenshtein_distance: f64 = 0.93; // default value which corresponds to 1-2 edits
-        let mut error_output_levenshtein_distance: f64 = 0.80; // default value which corresponds to ~4 edits
+        let mut inferring_levenshtein_distance: f64 = DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE;
+        let mut error_output_levenshtein_distance: f64 = DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE;
 
         for line_result in reader.lines() {
             let line = line_result.expect("Failed to read line from config file");
@@ -65,16 +68,22 @@ impl Configs {
             panic!("'order' path is not a valid .xlsx file: {:?}", order_path);
         }
 
-        if inferring_levenshtein_distance == 0.93 {
-            println!("!!!WARNING: USING DEFAULT INFERRING LEVENSHTEIN DISTANCE OF 0.93!!!");
+        if inferring_levenshtein_distance == DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE {
+            println!(
+                "!!!WARNING: USING DEFAULT INFERRING LEVENSHTEIN DISTANCE OF {:.2}!!!",
+                DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE
+            );
             println!("For custom value set in \'configs.txt\', e.g.");
             println!("inferring_levenshtein_distance=0.9")
         }
 
-        if error_output_levenshtein_distance == 0.8 {
-            println!("!!!WARNING: USING DEFAULT ERROR LEVENSHTEIN DISTANCE OF 0.8!!!");
+        if error_output_levenshtein_distance == DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE {
+            println!(
+                "!!!WARNING: USING DEFAULT ERROR OUTPUT LEVENSHTEIN DISTANCE OF {:.2}!!!",
+                DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE
+            );
             println!("For custom value set in \'configs.txt\', e.g.");
-            println!("error_output_levenshtein_distance=0.7")
+            println!("error_output_levenshtein_distance=0.5")
         }
 
         Configs {

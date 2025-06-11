@@ -51,30 +51,57 @@ fn print_errors(errors: &[ParseStickerError], configs: &configs::Configs) {
         }
     };
 
-    eprintln!("\nFiltered Errors Based on Description Similarity:");
+    eprintln!(
+        "\nFiltered Errors Based on Description Similarity: [Limit: {}]\n\n",
+        configs.error_output_levenshtein_distance
+    );
 
-    for error in errors {
-        let maybe_error_str = match error {
-            ParseStickerError::MissingCode(desc) => Some(desc),
-            ParseStickerError::MissingDescription(desc) => Some(desc),
-            ParseStickerError::MissingDimensions(desc) => Some(desc),
-            ParseStickerError::MissingMaterial(desc) => Some(desc),
-            ParseStickerError::UnknownColor(desc) => Some(desc),
-            ParseStickerError::UnknownMaterial(desc) => Some(desc),
-        };
+    for order in &orders {
+        let mut similarity_matches = String::new();
+        let mut code_matches = String::new();
 
-        if let Some(error_str) = maybe_error_str {
-            for order in &orders {
-                let similarity = normalized_levenshtein(&error_str, &order.description);
+        for error in errors {
+            let maybe_error_str = match error {
+                ParseStickerError::MissingCode(desc)
+                | ParseStickerError::MissingDescription(desc)
+                | ParseStickerError::MissingDimensions(desc)
+                | ParseStickerError::MissingMaterial(desc)
+                | ParseStickerError::UnknownColor(desc)
+                | ParseStickerError::UnknownMaterial(desc) => Some(desc),
+            };
+
+            if let Some(error_str) = maybe_error_str {
+                use std::fmt::Write;
+                let similarity = normalized_levenshtein(
+                    &error_str,
+                    format!("{}_{}", order.code, &order.description).as_str(),
+                );
+
                 if similarity >= configs.error_output_levenshtein_distance {
-                    eprintln!(
-                        "Error: {}\n  ↳ Similar to Order: \"{}\" (similarity: {:.2})",
-                        error, order.description, similarity
+                    let _ = writeln!(
+                        &mut similarity_matches,
+                        "\t\t↳ Similar to file name: \"{}\" with error \"{}\" (similarity: {:.2})",
+                        error_str, error, similarity
                     );
                 }
+
                 if error_str.contains(&order.code.to_string()) {
-                    eprintln!("Error: {error}");
+                    let _ = writeln!(
+                        &mut code_matches,
+                        "\t\t↳ Error contains code {}: \"{}\"",
+                        order.code, error_str
+                    );
                 }
+            }
+        }
+
+        if !similarity_matches.is_empty() || !code_matches.is_empty() {
+            eprintln!("Order: \"{}_{}\"", order.code, order.description,);
+            if !similarity_matches.is_empty() {
+                eprintln!("\t↳ Similarity Matches:\n{}", similarity_matches);
+            }
+            if !code_matches.is_empty() {
+                eprintln!("\t↳ Code Containment Matches:\n{}", code_matches);
             }
         }
     }

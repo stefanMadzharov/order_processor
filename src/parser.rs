@@ -200,7 +200,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum ParseStickerError {
     MissingCode(String),
     MissingDescription(String),
@@ -213,6 +213,31 @@ pub enum ParseStickerError {
 use std::fmt;
 
 impl fmt::Display for ParseStickerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseStickerError::MissingCode(_) => {
+                write!(f, "Missing sticker code")
+            }
+            ParseStickerError::MissingDescription(_) => {
+                write!(f, "Missing description")
+            }
+            ParseStickerError::MissingDimensions(_) => {
+                write!(f, "Missing dimensions")
+            }
+            ParseStickerError::MissingMaterial(_) => {
+                write!(f, "Missing material")
+            }
+            ParseStickerError::UnknownColor(_) => {
+                write!(f, "Unknown color")
+            }
+            ParseStickerError::UnknownMaterial(_) => {
+                write!(f, "Unknown material")
+            }
+        }
+    }
+}
+
+impl fmt::Debug for ParseStickerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ParseStickerError::MissingCode(name) => {

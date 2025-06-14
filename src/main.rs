@@ -1,7 +1,7 @@
 use either::Either;
 use itertools::Itertools;
 use order_processor::parser::ParseStickerError;
-use order_processor::{configs, excel, parser, sticker::Sticker};
+use order_processor::{configs, excel, parser, structs::sticker::Sticker};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;

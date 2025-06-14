@@ -1,3 +1,5 @@
+use super::{color::Color, material::Material};
+
 #[derive(Debug, Clone, Eq)]
 pub struct Sticker {
     pub code: u64,
@@ -74,56 +76,5 @@ impl PartialEq for Sticker {
             && self.dimensions == other.dimensions
             && self.material == other.material
             && self.text_color == other.text_color
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Order {
-    pub code: u64,
-    pub amount: u64,
-    pub description: String,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Material {
-    Paper,
-    PaperGR,
-    PVC,
-    PVCR,
-    PVCRSLV,
-    LEAFLET,
-}
-
-impl std::fmt::Display for Material {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let material_str = match self {
-            Material::Paper => "PAPER",
-            Material::PaperGR => "PAPER GR",
-            Material::PVC => "PVC",
-            Material::PVCR => "PVC R",
-            Material::PVCRSLV => "PVC R SLV",
-            Material::LEAFLET => "LEAFLET",
-        };
-        write!(f, "{}", material_str)
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Color {
-    Red,
-    Green,
-    Blue,
-    Black,
-}
-
-impl std::fmt::Display for Color {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let color_str = match self {
-            Color::Red => "Red",
-            Color::Green => "Green",
-            Color::Blue => "Blue",
-            Color::Black => "Black",
-        };
-        write!(f, "{}", color_str)
     }
 }

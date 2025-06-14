@@ -1,4 +1,4 @@
-use crate::sticker::{Color, Material, Order, Sticker};
+use crate::structs::{color::Color, material::Material, order::Order, sticker::Sticker};
 use calamine::{open_workbook_auto, Data, DataType, Reader};
 use chrono::Local;
 use std::collections::HashMap;

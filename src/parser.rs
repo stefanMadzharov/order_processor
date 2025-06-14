@@ -1,4 +1,4 @@
-use crate::sticker::{Color, Material, Sticker};
+use crate::structs::{color::Color, material::Material, sticker::Sticker};
 use rayon::prelude::*;
 use regex::Regex;
 use strsim::normalized_levenshtein;

@@ -1,3 +1,5 @@
+use super::parse_stcker_error::ParseStickerError;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Color {
     Red,
@@ -15,5 +17,21 @@ impl std::fmt::Display for Color {
             Color::Black => "Black",
         };
         write!(f, "{}", color_str)
+    }
+}
+
+use std::str::FromStr;
+
+impl FromStr for Color {
+    type Err = ParseStickerError;
+
+    fn from_str(color_string: &str) -> Result<Self, Self::Err> {
+        match color_string {
+            s if s.contains("RED") => Ok(Color::Red),
+            s if s.contains("GREEN") => Ok(Color::Green),
+            s if s.contains("BLUE") => Ok(Color::Blue),
+            s if s.contains("BLACK") || s.contains("BLK") => Ok(Color::Black),
+            _ => Err(ParseStickerError::UnknownColor(color_string.to_string())),
+        }
     }
 }

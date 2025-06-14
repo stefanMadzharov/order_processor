@@ -1,9 +1,9 @@
-use crate::structs::{color::Color, material::Material, sticker::Sticker};
+use crate::structs::{parse_stcker_error::ParseStickerError, sticker::Sticker};
 use rayon::prelude::*;
 use regex::Regex;
 use strsim::normalized_levenshtein;
 
-fn extract_code(name: &str) -> Result<&str, ParseStickerError> {
+pub fn extract_code(name: &str) -> Result<&str, ParseStickerError> {
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
     code_re
         .captures(name)
@@ -11,7 +11,7 @@ fn extract_code(name: &str) -> Result<&str, ParseStickerError> {
         .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))
 }
 
-fn extract_dimensions_str(name: &str) -> Result<&str, ParseStickerError> {
+pub fn extract_dimensions_str(name: &str) -> Result<&str, ParseStickerError> {
     let dimensions_re = Regex::new(r"(\d+[ХX]\d+(?:[_ ]\d+X\d+)*)").unwrap();
 
     dimensions_re
@@ -20,14 +20,14 @@ fn extract_dimensions_str(name: &str) -> Result<&str, ParseStickerError> {
         .ok_or_else(|| ParseStickerError::MissingDimensions(name.to_string()))
 }
 
-fn extract_dimensions(dimensions_str: &str) -> Vec<String> {
+pub fn extract_dimensions(dimensions_str: &str) -> Vec<String> {
     dimensions_str
         .split(['_', ' ', '-'])
         .map(|s| s.to_string())
         .collect()
 }
 
-fn extract_description(
+pub fn extract_description(
     name: &str,
     code: &str,
     dimensions_str: &str,
@@ -39,7 +39,7 @@ fn extract_description(
         .ok_or_else(|| ParseStickerError::MissingDescription(name.to_string()))
 }
 
-fn extract_material_and_color(
+pub fn extract_material_and_color(
     name: &str,
     dimensions_str: &str,
 ) -> (Result<String, ParseStickerError>, String) {
@@ -81,66 +81,6 @@ fn extract_material_and_color(
                 "BLACK".to_string(),
             )
         })
-}
-
-use std::str::FromStr;
-
-impl FromStr for Color {
-    type Err = ParseStickerError;
-
-    fn from_str(color_string: &str) -> Result<Self, Self::Err> {
-        match color_string {
-            s if s.contains("RED") => Ok(Color::Red),
-            s if s.contains("GREEN") => Ok(Color::Green),
-            s if s.contains("BLUE") => Ok(Color::Blue),
-            s if s.contains("BLACK") || s.contains("BLK") => Ok(Color::Black),
-            _ => Err(ParseStickerError::UnknownColor(color_string.to_string())),
-        }
-    }
-}
-
-impl FromStr for Material {
-    type Err = ParseStickerError;
-
-    fn from_str(material_string: &str) -> Result<Self, Self::Err> {
-        match material_string {
-            s if s.contains("GR") => Ok(Material::PaperGR),
-            s if s.contains("PAP") | s.contains("PP") => Ok(Material::Paper),
-            s if s.contains("LEAFLET") => Ok(Material::LEAFLET),
-            //-------------------------------------------------------------------------
-            s if s.contains("SLV") => Ok(Material::PVCRSLV),
-            s if s.contains("R") => Ok(Material::PVCR),
-            s if s.contains("PVC") => Ok(Material::PVC),
-            _ => Err(ParseStickerError::UnknownMaterial(
-                material_string.to_string(),
-            )),
-        }
-    }
-}
-
-impl FromStr for Sticker {
-    type Err = ParseStickerError;
-
-    fn from_str(name: &str) -> Result<Self, Self::Err> {
-        let code = extract_code(name)?;
-        let dimensions_str = extract_dimensions_str(name)?;
-        let dimensions = extract_dimensions(dimensions_str)
-            .into_iter()
-            .map(|d| d.to_lowercase())
-            .collect();
-        let description = extract_description(name, code, dimensions_str)?;
-        let (material_result, color) = extract_material_and_color(name, dimensions_str);
-        let material = material_result?;
-
-        Ok(Sticker::new(
-            code,
-            &description,
-            dimensions,
-            material.parse()?,
-            color.parse()?,
-            name.to_string(), // Preserve original name
-        ))
-    }
 }
 
 pub fn parse_names(names: &[String]) -> Vec<Result<Sticker, ParseStickerError>> {
@@ -197,67 +137,5 @@ pub fn try_infering_code_by_description_similiarity_measure(
             }
         }
         _ => return Err(error),
-    }
-}
-
-#[derive(Clone)]
-pub enum ParseStickerError {
-    MissingCode(String),
-    MissingDescription(String),
-    MissingDimensions(String),
-    MissingMaterial(String),
-    UnknownColor(String),
-    UnknownMaterial(String),
-}
-
-use std::fmt;
-
-impl fmt::Display for ParseStickerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParseStickerError::MissingCode(_) => {
-                write!(f, "Missing sticker code")
-            }
-            ParseStickerError::MissingDescription(_) => {
-                write!(f, "Missing description")
-            }
-            ParseStickerError::MissingDimensions(_) => {
-                write!(f, "Missing dimensions")
-            }
-            ParseStickerError::MissingMaterial(_) => {
-                write!(f, "Missing material")
-            }
-            ParseStickerError::UnknownColor(_) => {
-                write!(f, "Unknown color")
-            }
-            ParseStickerError::UnknownMaterial(_) => {
-                write!(f, "Unknown material")
-            }
-        }
-    }
-}
-
-impl fmt::Debug for ParseStickerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParseStickerError::MissingCode(name) => {
-                write!(f, "Missing sticker code in: {}", name)
-            }
-            ParseStickerError::MissingDescription(name) => {
-                write!(f, "Missing description in: {}", name)
-            }
-            ParseStickerError::MissingDimensions(name) => {
-                write!(f, "Missing dimensions in: {}", name)
-            }
-            ParseStickerError::MissingMaterial(name) => {
-                write!(f, "Missing material in: {}", name)
-            }
-            ParseStickerError::UnknownColor(color_string) => {
-                write!(f, "Unknown color in: {}", color_string)
-            }
-            ParseStickerError::UnknownMaterial(material_string) => {
-                write!(f, "Unknown material in: {}", material_string)
-            }
-        }
     }
 }

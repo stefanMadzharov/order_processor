@@ -1,4 +1,8 @@
-use super::{color::Color, material::Material};
+use super::{color::Color, material::Material, parse_stcker_error::ParseStickerError};
+use crate::parser::{
+    extract_code, extract_description, extract_dimensions, extract_dimensions_str,
+    extract_material_and_color,
+};
 
 #[derive(Debug, Clone, Eq)]
 pub struct Sticker {
@@ -42,6 +46,33 @@ impl Sticker {
                 substicker
             })
             .collect()
+    }
+}
+
+use std::str::FromStr;
+
+impl FromStr for Sticker {
+    type Err = ParseStickerError;
+
+    fn from_str(name: &str) -> Result<Self, Self::Err> {
+        let code = extract_code(name)?;
+        let dimensions_str = extract_dimensions_str(name)?;
+        let dimensions = extract_dimensions(dimensions_str)
+            .into_iter()
+            .map(|d| d.to_lowercase())
+            .collect();
+        let description = extract_description(name, code, dimensions_str)?;
+        let (material_result, color) = extract_material_and_color(name, dimensions_str);
+        let material = material_result?;
+
+        Ok(Sticker::new(
+            code,
+            &description,
+            dimensions,
+            material.parse()?,
+            color.parse()?,
+            name.to_string(), // Preserve original name
+        ))
     }
 }
 

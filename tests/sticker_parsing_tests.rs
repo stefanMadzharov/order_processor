@@ -1,6 +1,8 @@
 use order_processor::{
-    parser::{self, ParseStickerError},
-    structs::{color::Color, material::Material, sticker::Sticker},
+    parser,
+    structs::{
+        color::Color, material::Material, parse_stcker_error::ParseStickerError, sticker::Sticker,
+    },
 };
 use std::str::FromStr;
 

@@ -1,4 +1,6 @@
-use super::{color::Color, material::Material, parse_stcker_error::ParseStickerError};
+use super::{
+    color::Color, dimensions::Dimensions, material::Material, parse_stcker_error::ParseStickerError,
+};
 use crate::parser::{
     extract_code, extract_description, extract_dimensions, extract_dimensions_str,
     extract_material_and_color,
@@ -8,7 +10,7 @@ use crate::parser::{
 pub struct Sticker {
     pub code: u64,
     pub description: String,
-    pub dimensions: Vec<String>,
+    pub dimensions: Vec<Dimensions>,
     pub material: Material,
     pub text_color: Color,
     pub full_name: String,
@@ -18,7 +20,7 @@ impl Sticker {
     pub fn new(
         code: &str,
         description: &str,
-        dimensions: Vec<String>,
+        dimensions: Vec<Dimensions>,
         material: Material,
         text_color: Color,
         full_name: String,
@@ -57,10 +59,7 @@ impl FromStr for Sticker {
     fn from_str(name: &str) -> Result<Self, Self::Err> {
         let code = extract_code(name)?;
         let dimensions_str = extract_dimensions_str(name)?;
-        let dimensions = extract_dimensions(dimensions_str)
-            .into_iter()
-            .map(|d| d.to_lowercase())
-            .collect();
+        let dimensions = extract_dimensions(dimensions_str);
         let description = extract_description(name, code, dimensions_str)?;
         let (material_result, color) = extract_material_and_color(name, dimensions_str);
         let material = material_result?;
@@ -78,24 +77,10 @@ impl FromStr for Sticker {
 
 impl std::fmt::Display for Sticker {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let dims_str = if self.dimensions.len() > 1 {
-            self.dimensions
-                .iter()
-                .enumerate()
-                .map(|(i, d)| format!("{} - {}", i + 1, d))
-                .collect::<Vec<_>>()
-                .join(", ")
-        } else {
-            self.dimensions
-                .first()
-                .cloned()
-                .unwrap_or_else(|| "N/A".to_string())
-        };
-
         write!(
             f,
-            "Code: {}, Description: {}, Dimensions: {}, Material: {}, Color: {}",
-            self.code, self.description, dims_str, self.material, self.text_color,
+            "Code: {}, Description: {}, Dimensions: {:?}, Material: {}, Color: {}",
+            self.code, self.description, self.dimensions, self.material, self.text_color,
         )
     }
 }

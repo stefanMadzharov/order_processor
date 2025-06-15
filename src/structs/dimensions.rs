@@ -32,7 +32,7 @@ impl FromStr for Dimensions {
                 ))
             }
         } else {
-            Err("Invalid format, expected WxH".into())
+            Err(format!("Invalid format, expected \'WxH\' got \'{s}\'"))
         }
     }
 }

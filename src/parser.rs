@@ -1,4 +1,6 @@
-use crate::structs::{parse_stcker_error::ParseStickerError, sticker::Sticker};
+use crate::structs::{
+    dimensions::Dimensions, parse_stcker_error::ParseStickerError, sticker::Sticker,
+};
 use rayon::prelude::*;
 use regex::Regex;
 use strsim::normalized_levenshtein;
@@ -20,10 +22,26 @@ pub fn extract_dimensions_str(name: &str) -> Result<&str, ParseStickerError> {
         .ok_or_else(|| ParseStickerError::MissingDimensions(name.to_string()))
 }
 
-pub fn extract_dimensions(dimensions_str: &str) -> Vec<String> {
+pub fn extract_dimensions(dimensions_str: &str) -> Vec<Dimensions> {
     dimensions_str
         .split(['_', ' ', '-'])
-        .map(|s| s.to_string())
+        .map(|s| {
+            match s
+                .to_owned()
+                .to_lowercase()
+                .replace('х', "x")
+                .parse::<Dimensions>()
+            {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("{e}");
+                    Dimensions {
+                        width: 0,
+                        height: 0,
+                    }
+                }
+            }
+        })
         .collect()
 }
 

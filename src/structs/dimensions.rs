@@ -1,12 +1,21 @@
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
 use std::str::FromStr;
+
+// import the genereted during build time official dimensions
+include!(concat!(env!("OUT_DIR"), "/generated_dimensions.rs"));
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Dimensions {
     pub width: u32,
     pub height: u32,
+}
+
+impl Dimensions {
+    fn rev(&self) -> Self {
+        Dimensions {
+            width: self.height,
+            height: self.width,
+        }
+    }
 }
 
 impl std::fmt::Display for Dimensions {
@@ -25,7 +34,17 @@ impl FromStr for Dimensions {
                 .parse::<u32>()
                 .map_err(|e| format!("Invalid height {e}"))?;
             if width > 0 && height > 0 {
-                Ok(Dimensions { width, height })
+                let dims = Dimensions { width, height };
+                if OFFICIAL_DIMENSIONS.contains(&dims) {
+                    Ok(dims)
+                } else {
+                    let rev = dims.rev();
+                    if OFFICIAL_DIMENSIONS.contains(&rev) {
+                        Ok(rev)
+                    } else {
+                        Err(format!("{} is not in the official dimensions", dims))
+                    }
+                }
             } else {
                 Err(format!(
                     "Width and height must be greater than 0: {width}x{height}"
@@ -35,20 +54,4 @@ impl FromStr for Dimensions {
             Err(format!("Invalid format, expected \'WxH\' got \'{s}\'"))
         }
     }
-}
-
-pub fn read_dimensions_from_file<P: AsRef<Path>>(path: P) -> io::Result<Vec<Dimensions>> {
-    let file = File::open(path)?;
-    let reader = io::BufReader::new(file);
-    let mut dims = Vec::new();
-
-    for line in reader.lines() {
-        let line = line?;
-        match line.parse::<Dimensions>() {
-            Ok(dim) => dims.push(dim),
-            Err(err) => eprintln!("Skipping invalid line '{}': {}", line, err),
-        }
-    }
-
-    Ok(dims)
 }

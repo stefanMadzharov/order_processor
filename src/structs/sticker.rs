@@ -2,7 +2,7 @@ use super::{
     color::Color, dimensions::Dimensions, material::Material, parse_stcker_error::ParseStickerError,
 };
 use crate::parser::{
-    extract_code, extract_description, extract_dimensions, extract_material_and_color,
+    extract_code, extract_color, extract_description, extract_dimensions, extract_material,
     split_at_dimensions,
 };
 use regex::Regex;
@@ -40,13 +40,15 @@ impl Sticker {
         name: &str,
         code_re: &Regex,
         dimensions_re: &Regex,
+        material_re: &Regex,
+        color_re: &Regex,
     ) -> Result<Vec<Self>, ParseStickerError> {
         let code = extract_code(name, code_re)?;
         let name_parts = split_at_dimensions(name, dimensions_re)?; // before and after first WxH
         let dimensions = extract_dimensions(name_parts.1, dimensions_re);
         let description = extract_description(name_parts, code)?;
-        let (material_result, color) = extract_material_and_color(name_parts);
-        let material = material_result?;
+        let material = extract_material(name_parts, material_re)?;
+        let color = extract_color(name_parts.1, color_re).unwrap_or_default();
 
         let mut stickers = vec![];
         for dimensions in dimensions.iter() {

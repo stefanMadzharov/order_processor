@@ -20,9 +20,13 @@ impl std::fmt::Display for Color {
     }
 }
 
-use std::str::FromStr;
+impl std::default::Default for Color {
+    fn default() -> Self {
+        Color::Black
+    }
+}
 
-impl FromStr for Color {
+impl std::str::FromStr for Color {
     type Err = ParseStickerError;
 
     fn from_str(color_string: &str) -> Result<Self, Self::Err> {

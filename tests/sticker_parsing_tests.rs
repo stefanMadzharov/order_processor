@@ -393,3 +393,91 @@ fn test_fail_with_unrelated_description() {
         parser::try_infering_code_by_description_similiarity_measure(error, &existing, 0.93);
     assert!(result.is_err());
 }
+
+#[test]
+fn test_double_sticker_dimensions() {
+    use crate::{Dimensions, Sticker};
+
+    let test_cases = vec![
+        (
+            "209989_DU DENSIAGE DOBAVKA 30TABL_30X101_45X59_PVC_R_SLV",
+            vec!["30x101", "45x59"],
+        ),
+        (
+            "207073 _RF VITALFAN SOL 30K_36X73_ 58X75_PAPER GREEN_DV_ST",
+            vec!["36x73", "58x75"],
+        ),
+        (
+            "254285_DU ANACAPS EXPERT 30CAPS_1ST 68X40_2ST 68X40_PAPER_BLUE_OK_PF",
+            vec!["68x40", "68x40"],
+        ),
+        (
+            "220763_RF VITALFAN PROGR SINGLE 30K_58X75_36X73_PAPER GREEN_DVOEN STIKER",
+            vec!["58x75", "36x73"],
+        ),
+        (
+            "211949_EL SD GELULE MINCEUR TABLETES_45X102_45X40_PVC_OK",
+            vec!["45x40"],
+        ),
+        (
+            "207687_AD HYDRALBA UV RICH CR 40ML_70X40_PVC&40X45_PVC R_OK",
+            vec!["70x40", "40x45"],
+        ),
+        (
+            "254310_DU ANACAPS REACTIV GEL 30U_40X68_42X50_PAPER BLUE_DB ST_PF",
+            vec!["40x68", "42x50"],
+        ),
+        (
+            "211949_EL SD GELULE MINCEUR TABLETES_45X102_45X40_PVC",
+            vec!["45x40"],
+        ),
+        (
+            "538752_AD DERMALIBUR CR BAR 100ML_40X100&40X45_DVA STIKERA_PVC_OK",
+            vec!["40x100", "40x45"],
+        ),
+        (
+            "254285_DU ANACAPS EXPERT 30CAPS_1ST 68X40_2ST 68X40_PAPER_BLUE_PF_2",
+            vec!["68x40", "68x40"],
+        ),
+        (
+            "515134_AD EXOMEGA DEFI 200ML_40X100_40X45_ДВОЕН СТИКЕР_PVC_OK",
+            vec!["40x100", "40x45"],
+        ),
+        (
+            "207586_AD DERMAL CR REP 100ML_40X100_22X106_OBEDINEN STIKER_PVC_OK",
+            vec!["40x100", "22x106"],
+        ),
+        (
+            "207686_AD HYDRALBA UV LEGERE TUBE 40ML_40X70_PVC_&_40X45_PVC_R_OK",
+            vec!["40x70", "40x45"],
+        ),
+        (
+            "209989_DU DENSIAGE DOBAVKA 30TABL_30X101_45X59_PVC_R_OK_SLV",
+            vec!["30x101", "45x59"],
+        ),
+        (
+            "207686_AD HYDRALBA UV LEGERE TUBE 40ML_40X70_PVC_&_40X45_PVC_R",
+            vec!["40x70", "40x45"],
+        ),
+        (
+            "205475_RF VITALFAN PROGR SINGLE 30K_58X75_40X68_PAPER GREEN_DVOEN STIKER",
+            vec!["58x75", "40x68"],
+        ),
+        (
+            "207873_BOX SPRAY ETA COLLECT_3X50ML_40X100_40X27_DV.ST.PVC_R_OK_PF",
+            vec!["40x100", "40x27"],
+        ),
+    ];
+
+    for (filename, expected_sizes) in test_cases {
+        let stickers = Sticker::parse_stickers(filename).unwrap();
+        for (i, expected) in expected_sizes.iter().enumerate() {
+            let expected_dim = expected.parse::<Dimensions>().unwrap();
+            assert_eq!(
+                stickers[i].dimensions, expected_dim,
+                "Mismatch in dimensions for file: {}",
+                filename
+            );
+        }
+    }
+}

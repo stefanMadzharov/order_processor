@@ -28,7 +28,13 @@ impl FromStr for Dimensions {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Some((w, h)) = s.trim().split_once('x') {
+        if let Some((w, h)) = s
+            .trim()
+            .to_owned()
+            .to_uppercase()
+            .replace("Х", "X")
+            .split_once("X")
+        {
             let width = w.parse::<u32>().map_err(|e| format!("Invalid width {e}"))?;
             let height = h
                 .parse::<u32>()
@@ -51,7 +57,7 @@ impl FromStr for Dimensions {
                 ))
             }
         } else {
-            Err(format!("Invalid format, expected \'WxH\' got \'{s}\'"))
+            Err(format!("Invalid format, expected \'WXH\' got \'{s}\'"))
         }
     }
 }

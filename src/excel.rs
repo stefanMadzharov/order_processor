@@ -150,19 +150,11 @@ pub fn write_sizes_table(
     for order in orders {
         if let Some(stickers) = code_to_stickers.get(&order.code) {
             for sticker in stickers {
-                let dims = sticker
-                    .dimensions
-                    .iter()
-                    .enumerate()
-                    .map(|(i, d)| format!("{} - {}", i + 1, d))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-
                 let values = [
                     sticker.code.to_string(),
                     sticker.description.clone(),
                     sticker.material.to_string(),
-                    dims,
+                    sticker.dimensions.to_string(),
                     order.amount.to_string(),
                 ];
 

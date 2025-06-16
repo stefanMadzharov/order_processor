@@ -2,15 +2,15 @@ use super::{
     color::Color, dimensions::Dimensions, material::Material, parse_stcker_error::ParseStickerError,
 };
 use crate::parser::{
-    extract_code, extract_description, extract_dimensions, extract_dimensions_str,
-    extract_material_and_color,
+    extract_code, extract_description, extract_dimensions, extract_material_and_color,
+    split_at_dimensions,
 };
 
 #[derive(Debug, Clone, Eq)]
 pub struct Sticker {
     pub code: u64,
     pub description: String,
-    pub dimensions: Vec<Dimensions>,
+    pub dimensions: Dimensions,
     pub material: Material,
     pub text_color: Color,
     pub full_name: String,
@@ -18,18 +18,15 @@ pub struct Sticker {
 
 impl Sticker {
     pub fn new(
-        code: &str,
+        code: u64,
         description: &str,
-        dimensions: Vec<Dimensions>,
+        dimensions: Dimensions,
         material: Material,
         text_color: Color,
         full_name: String,
     ) -> Sticker {
         Sticker {
-            code: code
-                .to_owned()
-                .parse()
-                .expect(("Coulndn't parse code into u64".to_owned() + &code.to_owned()).as_str()),
+            code,
             description: description.to_owned(),
             dimensions,
             material,
@@ -38,40 +35,26 @@ impl Sticker {
         }
     }
 
-    pub fn split(&self) -> Vec<Self> {
-        self.clone()
-            .dimensions
-            .into_iter()
-            .map(|sub_sticker_dims| {
-                let mut substicker = self.clone();
-                substicker.dimensions = vec![sub_sticker_dims];
-                substicker
-            })
-            .collect()
-    }
-}
-
-use std::str::FromStr;
-
-impl FromStr for Sticker {
-    type Err = ParseStickerError;
-
-    fn from_str(name: &str) -> Result<Self, Self::Err> {
+    pub fn parse_stickers(name: &str) -> Result<Vec<Self>, ParseStickerError> {
         let code = extract_code(name)?;
-        let dimensions_str = extract_dimensions_str(name)?;
-        let dimensions = extract_dimensions(dimensions_str);
-        let description = extract_description(name, code, dimensions_str)?;
-        let (material_result, color) = extract_material_and_color(name, dimensions_str);
+        let name_parts = split_at_dimensions(name)?; // before and after first WxH
+        let dimensions = extract_dimensions(name_parts.1);
+        let description = extract_description(name_parts, code)?;
+        let (material_result, color) = extract_material_and_color(name_parts);
         let material = material_result?;
 
-        Ok(Sticker::new(
-            code,
-            &description,
-            dimensions,
-            material.parse()?,
-            color.parse()?,
-            name.to_string(), // Preserve original name
-        ))
+        let mut stickers = vec![];
+        for dimensions in dimensions.iter() {
+            stickers.push(Sticker::new(
+                code,
+                &description,
+                dimensions.clone(),
+                material.clone(),
+                color.clone(),
+                name.to_string(), // Preserve original name
+            ))
+        }
+        Ok(stickers)
     }
 }
 

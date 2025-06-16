@@ -5,6 +5,7 @@ use crate::parser::{
     extract_code, extract_description, extract_dimensions, extract_material_and_color,
     split_at_dimensions,
 };
+use regex::Regex;
 
 #[derive(Debug, Clone, Eq)]
 pub struct Sticker {
@@ -24,8 +25,8 @@ impl Sticker {
         material: Material,
         text_color: Color,
         full_name: String,
-    ) -> Sticker {
-        Sticker {
+    ) -> Self {
+        Self {
             code,
             description: description.to_owned(),
             dimensions,
@@ -35,17 +36,21 @@ impl Sticker {
         }
     }
 
-    pub fn parse_stickers(name: &str) -> Result<Vec<Self>, ParseStickerError> {
-        let code = extract_code(name)?;
-        let name_parts = split_at_dimensions(name)?; // before and after first WxH
-        let dimensions = extract_dimensions(name_parts.1);
+    pub fn parse_stickers(
+        name: &str,
+        code_re: &Regex,
+        dimensions_re: &Regex,
+    ) -> Result<Vec<Self>, ParseStickerError> {
+        let code = extract_code(name, code_re)?;
+        let name_parts = split_at_dimensions(name, dimensions_re)?; // before and after first WxH
+        let dimensions = extract_dimensions(name_parts.1, dimensions_re);
         let description = extract_description(name_parts, code)?;
         let (material_result, color) = extract_material_and_color(name_parts);
         let material = material_result?;
 
         let mut stickers = vec![];
         for dimensions in dimensions.iter() {
-            stickers.push(Sticker::new(
+            stickers.push(Self::new(
                 code,
                 &description,
                 dimensions.clone(),

@@ -6,8 +6,7 @@ use rayon::prelude::*;
 use regex::Regex;
 use strsim::normalized_levenshtein;
 
-pub fn extract_code(name: &str) -> Result<u64, ParseStickerError> {
-    let code_re = Regex::new(r"^(\d{3,})").unwrap();
+pub fn extract_code(name: &str, code_re: &Regex) -> Result<u64, ParseStickerError> {
     code_re
         .captures(name)
         .and_then(|caps| caps.get(1))
@@ -17,9 +16,10 @@ pub fn extract_code(name: &str) -> Result<u64, ParseStickerError> {
         .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))
 }
 
-pub fn split_at_dimensions(name: &str) -> Result<(&str, &str), ParseStickerError> {
-    let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
-
+pub fn split_at_dimensions<'a>(
+    name: &'a str,
+    dimensions_re: &Regex,
+) -> Result<(&'a str, &'a str), ParseStickerError> {
     let output = dimensions_re
         .find_iter(name)
         .find_map(|m| {
@@ -32,9 +32,7 @@ pub fn split_at_dimensions(name: &str) -> Result<(&str, &str), ParseStickerError
     output
 }
 
-pub fn extract_dimensions(end_string: &str) -> Vec<Dimensions> {
-    let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
-
+pub fn extract_dimensions(end_string: &str, dimensions_re: &Regex) -> Vec<Dimensions> {
     dimensions_re
         .find_iter(end_string)
         .filter_map(|m| m.as_str().parse::<Dimensions>().ok())
@@ -91,9 +89,12 @@ pub fn extract_material_and_color(
 }
 
 pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerError>> {
+    let code_re = Regex::new(r"^(\d{3,})").unwrap();
+    let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
+
     names
         .par_iter()
-        .map(|name| Sticker::parse_stickers(name))
+        .map(|name| Sticker::parse_stickers(name, &code_re, &dimensions_re))
         .collect()
 }
 
@@ -103,7 +104,10 @@ pub fn try_infering_code_by_description_similiarity_measure(
     levenshtein_distance_bound: f64,
 ) -> Result<Vec<Sticker>, ParseStickerError> {
     if let ParseStickerError::MissingCode(name) = &error {
-        let error_description = split_at_dimensions(&name)?
+        let code_re = Regex::new(r"^(\d{3,})").unwrap();
+        let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
+
+        let error_description = split_at_dimensions(&name, &dimensions_re)?
             .0
             .trim_matches(['_', ' '].as_ref());
 
@@ -120,6 +124,8 @@ pub fn try_infering_code_by_description_similiarity_measure(
             .flat_map(|(i, _)| {
                 Sticker::parse_stickers(
                     (parsed_stickers[i].code.clone().to_string() + &name).as_str(),
+                    &code_re,
+                    &dimensions_re,
                 )
                 .unwrap()
             })

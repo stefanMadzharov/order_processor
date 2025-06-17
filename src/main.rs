@@ -75,7 +75,7 @@ fn print_errors(errors: &[ParseStickerError], configs: &configs::Configs) {
             if let Some(error_str) = maybe_error_str {
                 use std::fmt::Write;
                 let similarity = normalized_levenshtein(
-                    &error_str,
+                    error_str,
                     format!("{}_{}", order.code, &order.description).as_str(),
                 );
 
@@ -114,7 +114,7 @@ fn main() {
 
     let file_names = get_cdr_prefixes_recursively(&configs.archive_path);
 
-    let parsing_results = parser::parse_names(&*file_names);
+    let parsing_results = parser::parse_names(&file_names);
 
     let (stickers, errors): (Vec<Vec<Sticker>>, Vec<ParseStickerError>) =
         parsing_results.into_iter().partition_map(|res| match res {
@@ -122,7 +122,7 @@ fn main() {
             Err(error) => Either::Right(error),
         });
 
-    let mut stickers = stickers.into_iter().flatten().collect();
+    let mut stickers: Vec<Sticker> = stickers.into_iter().flatten().collect();
 
     let mut unrecoverable_errors = vec![];
 
@@ -135,8 +135,7 @@ fn main() {
             ) {
                 Ok(similar_stickers) => {
                     for mut similar_sticker in similar_stickers {
-                        similar_sticker.description =
-                            similar_sticker.description + &" !!!INFERRED!!!".to_owned();
+                        similar_sticker.description += " !!!INFERRED!!!";
                         stickers.push(similar_sticker);
                     }
                 }
@@ -157,7 +156,7 @@ fn main() {
     for sticker in &stickers {
         code_to_stickers_hashmap
             .entry(sticker.code)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(sticker.clone());
     }
 

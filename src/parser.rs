@@ -64,12 +64,10 @@ pub fn extract_material(
         caps.name("material")
             .and_then(|m| m.as_str().parse().ok())
             .ok_or(ParseStickerError::MissingMaterial(name))
+    } else if name.contains("LEAFLET") {
+        Ok(Material::LEAFLET)
     } else {
-        if name.contains("LEAFLET") {
-            Ok(Material::LEAFLET)
-        } else {
-            Err(ParseStickerError::MissingMaterial(name))
-        }
+        Err(ParseStickerError::MissingMaterial(name))
     }
 }
 
@@ -102,7 +100,7 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerErr
 
 pub fn try_infering_code_by_description_similiarity_measure(
     error: ParseStickerError,
-    parsed_stickers: &Vec<Sticker>,
+    parsed_stickers: &[Sticker],
     levenshtein_distance_bound: f64,
 ) -> Result<Vec<Sticker>, ParseStickerError> {
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
@@ -114,7 +112,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
     let color_re = Regex::new(r"(?i)(?P<color>BLK|BLACK|RED|GREEN|BLUE)").unwrap();
 
     if let ParseStickerError::MissingCode(name) = &error {
-        let error_description = split_at_dimensions(&name, &dimensions_re)?
+        let error_description = split_at_dimensions(name, &dimensions_re)?
             .0
             .trim_matches(['_', ' '].as_ref());
 
@@ -124,13 +122,13 @@ pub fn try_infering_code_by_description_similiarity_measure(
             .map(|(i, sticker)| {
                 (
                     i,
-                    normalized_levenshtein(&error_description, &sticker.description).abs(),
+                    normalized_levenshtein(error_description, &sticker.description).abs(),
                 )
             })
             .filter(|(_, levenshtein)| *levenshtein >= levenshtein_distance_bound)
             .flat_map(|(i, _)| {
                 Sticker::parse_stickers(
-                    (parsed_stickers[i].code.clone().to_string() + &name).as_str(),
+                    (parsed_stickers[i].code.clone().to_string() + name).as_str(),
                     &code_re,
                     &dimensions_re,
                     &material_re,

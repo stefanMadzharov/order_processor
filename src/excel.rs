@@ -10,7 +10,7 @@ type Coord = (usize, usize);
 
 /// Parse orders from an Excel file
 pub fn parse_orders(file_path: &str) -> Result<Vec<Order>, Box<dyn Error>> {
-    let mut workbook = open_workbook_auto(&file_path)?;
+    let mut workbook = open_workbook_auto(file_path)?;
     let range = workbook.worksheet_range("Sheet1")?;
 
     let cell1 = find_keyword_cell(

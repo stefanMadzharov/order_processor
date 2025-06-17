@@ -1,10 +1,11 @@
 use super::parse_stcker_error::ParseStickerError;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub enum Color {
     Red,
     Green,
     Blue,
+    #[default]
     Black,
 }
 
@@ -17,12 +18,6 @@ impl std::fmt::Display for Color {
             Color::Black => "Black",
         };
         write!(f, "{}", color_str)
-    }
-}
-
-impl std::default::Default for Color {
-    fn default() -> Self {
-        Color::Black
     }
 }
 

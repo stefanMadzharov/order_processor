@@ -47,21 +47,37 @@ impl Sticker {
         let name_parts = split_at_dimensions(name, dimensions_re)?; // before and after first WxH
         let description = extract_description(name_parts, code)?;
         let dimensions = extract_dimensions(name_parts.1, dimensions_re);
-        let material = extract_material(name_parts.1, material_re, name)?;
+        let materials: Vec<Material> = dimensions_re
+            .split(name_parts.1)
+            .filter_map(|material_part| extract_material(material_part, material_re, name).ok())
+            .collect();
         let color = extract_color(name_parts.1, color_re).unwrap_or_default();
 
-        let mut stickers = vec![];
-        for dimensions in dimensions.iter() {
-            stickers.push(Self::new(
-                code,
-                &description,
-                dimensions.clone(),
-                material.clone(),
-                color.clone(),
-                name.to_string(), // Preserve original name
-            ))
+        if materials.is_empty() {
+            return Err(ParseStickerError::MissingMaterial(name.to_owned()));
         }
-        Ok(stickers)
+
+        Ok(dimensions
+            .iter()
+            .cloned()
+            .zip(if materials.len() == dimensions.len() {
+                materials
+            } else {
+                std::iter::repeat(materials[0].clone())
+                    .take(dimensions.len())
+                    .collect()
+            })
+            .map(|(dimensions, material)| {
+                Self::new(
+                    code,
+                    &description,
+                    dimensions,
+                    material,
+                    color.clone(),
+                    name.to_string(), // Preserve original name
+                )
+            })
+            .collect())
     }
 }
 

@@ -1,13 +1,12 @@
+use colored::*;
 use either::Either;
 use itertools::Itertools;
 use order_processor::{
     configs, excel, parser,
     structs::{parse_stcker_error::ParseStickerError, sticker::Sticker},
 };
-use std::collections::HashMap;
-use std::fs;
-use std::path::Path;
-use strsim::normalized_levenshtein;
+use std::{collections::HashMap, fmt::Write, fs, path::Path};
+use strsim::normalized_levenshtein; // Import the colored traits
 
 fn get_cdr_prefixes_recursively(dir: &Path) -> Vec<String> {
     let mut prefixes = Vec::new();
@@ -42,14 +41,23 @@ fn print_errors(errors: &[ParseStickerError], configs: &configs::Configs) {
     let orders = match excel::parse_orders(configs) {
         Ok(orders) => orders,
         Err(e) => {
-            eprintln!("Failed to parse orders: {:?}", e);
+            eprintln!("{}: {:?}", "Failed to parse orders".red().bold(), e);
             return;
         }
     };
 
     eprintln!(
-        "\nFiltered Errors Based on Description Similarity: [Limit: {}]\n\n",
-        configs.error_output_levenshtein_distance
+        "\n{}: [{} {} {}]\n",
+        "Filtered Errors Based on Description Similarity"
+            .underline()
+            .bold()
+            .blue(),
+        "Limit".bold(),
+        configs
+            .error_output_levenshtein_distance
+            .to_string()
+            .yellow(),
+        "similarity".dimmed()
     );
 
     for order in &orders {
@@ -57,48 +65,62 @@ fn print_errors(errors: &[ParseStickerError], configs: &configs::Configs) {
         let mut code_matches = String::new();
 
         for error in errors {
-            let maybe_error_str = match error {
-                ParseStickerError::MissingCode(desc)
-                | ParseStickerError::MissingDescription(desc)
-                | ParseStickerError::MissingDimensions(desc)
-                | ParseStickerError::MissingMaterial(desc)
-                | ParseStickerError::UnknownColor(desc)
-                | ParseStickerError::UnknownMaterial(desc) => Some(desc),
-            };
+            let error_str = error.get_description();
+            let similarity = normalized_levenshtein(
+                error_str.as_str(),
+                format!("{}_{}", order.code, &order.description).as_str(),
+            );
 
-            if let Some(error_str) = maybe_error_str {
-                use std::fmt::Write;
-                let similarity = normalized_levenshtein(
-                    error_str,
-                    format!("{}_{}", order.code, &order.description).as_str(),
+            if similarity >= configs.error_output_levenshtein_distance {
+                let _ = writeln!(
+                    &mut similarity_matches,
+                    "\t\t{} \"{}\" {} \"{}\" {} {:.2}{}",
+                    "↳ Similar to file name:".cyan(),
+                    error_str.yellow(),
+                    "with error".dimmed(),
+                    format!("{:?}", error).italic(),
+                    "(similarity:".dimmed(),
+                    similarity,
+                    ")".dimmed(),
                 );
+            }
 
-                if similarity >= configs.error_output_levenshtein_distance {
-                    let _ = writeln!(
-                        &mut similarity_matches,
-                        "\t\t↳ Similar to file name: \"{}\" with error \"{}\" (similarity: {:.2})",
-                        error_str, error, similarity
-                    );
-                }
-
-                if error_str.contains(&order.code.to_string()) {
-                    let _ = writeln!(
-                        &mut code_matches,
-                        "\t\t↳ Error contains code {}: \"{:?}\"",
-                        order.code, error
-                    );
-                }
+            if error_str.contains(&order.code.to_string()) {
+                let _ = writeln!(
+                    &mut code_matches,
+                    "\t\t{} {}: {}",
+                    "↳ Error contains code".magenta(),
+                    order.code.to_string().yellow(),
+                    format!("{:?}", error).italic()
+                );
             }
         }
 
         if !similarity_matches.is_empty() || !code_matches.is_empty() {
-            eprintln!("Order: \"{}_{}\"", order.code, order.description,);
+            eprintln!(
+                "{}: \"{}_{}\"",
+                "Order".bright_blue().bold(),
+                order.code.to_string().yellow(),
+                order.description.green()
+            );
+
             if !similarity_matches.is_empty() {
-                eprintln!("\t↳ Similarity Matches:\n{}", similarity_matches);
+                eprintln!(
+                    "\t{}:\n{}",
+                    "Similarity Matches".bold().cyan(),
+                    similarity_matches
+                );
             }
+
             if !code_matches.is_empty() {
-                eprintln!("\t↳ Code Containment Matches:\n{}", code_matches);
+                eprintln!(
+                    "\t{}:\n{}",
+                    "Code Containment Matches".bold().magenta(),
+                    code_matches
+                );
             }
+
+            eprintln!("{}", "_".repeat(100).dimmed());
         }
     }
 }

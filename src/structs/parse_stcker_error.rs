@@ -8,6 +8,19 @@ pub enum ParseStickerError {
     UnknownMaterial(String),
 }
 
+impl ParseStickerError {
+    pub fn get_description(&self) -> String {
+        match self {
+            ParseStickerError::MissingCode(desc)
+            | ParseStickerError::MissingDescription(desc)
+            | ParseStickerError::MissingDimensions(desc)
+            | ParseStickerError::MissingMaterial(desc)
+            | ParseStickerError::UnknownColor(desc)
+            | ParseStickerError::UnknownMaterial(desc) => desc.clone(),
+        }
+    }
+}
+
 use std::fmt;
 
 impl fmt::Display for ParseStickerError {

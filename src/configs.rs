@@ -6,6 +6,8 @@ pub struct Configs {
     pub archive_path: PathBuf,
     pub order_path: PathBuf,
     pub dimensions_path: PathBuf,
+    pub sheet_name: Option<String>,
+    pub order_amount_column_name: Option<String>,
     pub inferring_levenshtein_distance: f64,
     pub error_output_levenshtein_distance: f64,
 }
@@ -25,6 +27,8 @@ impl Configs {
         let mut dimensions_path = Some(PathBuf::from("./dimensions.txt"));
         let mut inferring_levenshtein_distance: f64 = DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE;
         let mut error_output_levenshtein_distance: f64 = DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE;
+        let mut sheet_name: Option<String> = None;
+        let mut order_amount_column_name: Option<String> = None;
 
         for line_result in reader.lines() {
             let line = line_result.expect("Failed to read line from config file");
@@ -46,10 +50,16 @@ impl Configs {
                     "error_output_levenshtein_distance" => {
                         error_output_levenshtein_distance = value.parse().unwrap_or_else(|_| {
                             panic!(
-                                "Invalid float for inferring_levenshtein_distance: {}",
+                                "Invalid float for error_output_levenshtein_distance: {}",
                                 value
                             )
                         });
+                    }
+                    "sheet_name" => {
+                        sheet_name = Some(value.to_string());
+                    }
+                    "order_amount_column_name" => {
+                        order_amount_column_name = Some(value.to_string());
                     }
                     _ => continue,
                 }
@@ -76,7 +86,7 @@ impl Configs {
                 && order_path.extension().and_then(|e| e.to_str()) != Some("xls")
         {
             panic!(
-                "'order' path is not a valid excel file(\'.xlsx\', \'.xls\') file: {:?}",
+                "'order' path is not a valid excel file ('.xlsx', '.xls'): {:?}",
                 order_path
             );
         }
@@ -86,8 +96,8 @@ impl Configs {
                 "!!!WARNING: USING DEFAULT INFERRING LEVENSHTEIN DISTANCE OF {:.2}!!!",
                 DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE
             );
-            println!("For custom value set in \'configs.txt\', e.g.");
-            println!("inferring_levenshtein_distance=0.9")
+            println!("For custom value set in 'configs.txt', e.g.");
+            println!("inferring_levenshtein_distance=0.9");
         }
 
         if error_output_levenshtein_distance == DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE {
@@ -95,14 +105,16 @@ impl Configs {
                 "!!!WARNING: USING DEFAULT ERROR OUTPUT LEVENSHTEIN DISTANCE OF {:.2}!!!",
                 DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE
             );
-            println!("For custom value set in \'configs.txt\', e.g.");
-            println!("error_output_levenshtein_distance=0.5")
+            println!("For custom value set in 'configs.txt', e.g.");
+            println!("error_output_levenshtein_distance=0.5");
         }
 
         Configs {
             archive_path,
             order_path,
             dimensions_path,
+            sheet_name,
+            order_amount_column_name,
             inferring_levenshtein_distance,
             error_output_levenshtein_distance,
         }

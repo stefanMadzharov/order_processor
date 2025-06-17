@@ -1,4 +1,8 @@
-use crate::structs::{color::Color, material::Material, order::Order, sticker::Sticker};
+use crate::{
+    configs::Configs,
+    structs::{color::Color, material::Material, order::Order, sticker::Sticker},
+};
+
 use calamine::{open_workbook_auto, Data, DataType, Reader};
 use chrono::Local;
 use std::collections::HashMap;
@@ -9,9 +13,17 @@ use xlsxwriter::*;
 type Coord = (usize, usize);
 
 /// Parse orders from an Excel file
-pub fn parse_orders(file_path: &str) -> Result<Vec<Order>, Box<dyn Error>> {
+pub fn parse_orders(configs: &Configs) -> Result<Vec<Order>, Box<dyn Error>> {
+    let file_path = configs.order_path.to_str().ok_or("Invalid file path")?;
+
     let mut workbook = open_workbook_auto(file_path)?;
-    let range = workbook.worksheet_range("Sheet1")?;
+    let range = workbook.worksheet_range(
+        configs
+            .sheet_name
+            .clone()
+            .unwrap_or("Sheet1".to_owned())
+            .as_str(),
+    )?;
 
     let cell1 = find_keyword_cell(
         &range,
@@ -19,14 +31,22 @@ pub fn parse_orders(file_path: &str) -> Result<Vec<Order>, Box<dyn Error>> {
         40,
         &["БГ СТИКЕР", "Френски код", "French code", "Fr Code"],
     )?;
-    let cell2 = find_row_keyword_in_same_row(
+    let mut order_amount_keywords: Vec<String> = vec![
+        "Поръчка".into(),
+        "Брой".into(),
+        "Order".into(),
+        "Total".into(),
+    ];
+    if let Some(keyword) = configs.order_amount_column_name.clone() {
+        order_amount_keywords.push(keyword);
+    }
+    let cell2 = find_row_keyword_in_same_row(&range, cell1.0, 10, &order_amount_keywords)?;
+    let cell3 = find_row_keyword_in_same_row(
         &range,
         cell1.0,
         10,
-        &["Поръчка", "Брой", "Order", "Total", "10/2025"],
+        &["Описание".into(), "Description".into(), "Product".into()],
     )?;
-    let cell3 =
-        find_row_keyword_in_same_row(&range, cell1.0, 10, &["Описание", "Description", "Product"])?;
 
     let orders = extract_orders(&range, cell1.1, cell2.1, cell3.1, cell1.0)?;
     Ok(orders)
@@ -59,7 +79,7 @@ fn find_row_keyword_in_same_row(
     range: &calamine::Range<Data>,
     row: usize,
     max_cols: usize,
-    keywords: &[&str],
+    keywords: &[String],
 ) -> Result<Coord, Box<dyn Error>> {
     for col in 0..max_cols {
         if let Some(val) = range.get((row, col)) {
@@ -147,8 +167,29 @@ pub fn write_sizes_table(
     }
 
     let mut row = 1;
+    let mut last_multi: Option<bool> = None;
+    let mut use_grey = true;
+
     for order in orders {
         if let Some(stickers) = code_to_stickers.get(&order.code) {
+            let is_multi = stickers.len() > 1;
+
+            // Determine color alternation for multi-sticker orders (only used for column 0)
+            let code_bg_color = if is_multi {
+                if last_multi.unwrap_or(false) {
+                    use_grey = !use_grey;
+                }
+                Some(if use_grey {
+                    FormatColor::Silver
+                } else {
+                    FormatColor::Lime
+                })
+            } else {
+                None
+            };
+
+            last_multi = Some(is_multi);
+
             for sticker in stickers {
                 let values = [
                     sticker.code.to_string(),
@@ -160,6 +201,13 @@ pub fn write_sizes_table(
 
                 for (col, value) in values.iter().enumerate() {
                     let format = match col {
+                        0 => {
+                            let mut f = base_format.clone();
+                            if let Some(bg) = code_bg_color {
+                                f.set_bg_color(bg);
+                            }
+                            f
+                        }
                         2 => {
                             let mut f = Format::from(sticker.material.clone());
                             f.set_border(FormatBorder::Thin);
@@ -237,14 +285,12 @@ pub fn write_missing_table(
     Ok(())
 }
 
-pub fn write_tables<P: AsRef<std::path::Path>>(
-    file_path: P,
+pub fn write_tables(
+    configs: &Configs,
     code_to_stickers: &HashMap<u64, Vec<Sticker>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let file_path_str = file_path.as_ref().to_str().ok_or("Invalid file path")?;
-
     // Parse orders
-    let orders = parse_orders(file_path_str)?;
+    let orders = parse_orders(configs)?;
 
     // Split available/missing
     let (available_orders, missing_orders): (Vec<_>, Vec<_>) = orders

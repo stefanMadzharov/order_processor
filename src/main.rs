@@ -39,13 +39,7 @@ fn get_cdr_prefixes_recursively(dir: &Path) -> Vec<String> {
 }
 
 fn print_errors(errors: &[ParseStickerError], configs: &configs::Configs) {
-    let orders = match excel::parse_orders(
-        configs
-            .order_path
-            .to_str()
-            .ok_or("Invalid file path")
-            .expect("Wrong order path"),
-    ) {
+    let orders = match excel::parse_orders(configs) {
         Ok(orders) => orders,
         Err(e) => {
             eprintln!("Failed to parse orders: {:?}", e);
@@ -164,7 +158,7 @@ fn main() {
         print_errors(&unrecoverable_errors, &configs);
     }
 
-    if let Err(e) = excel::write_tables(configs.order_path, &code_to_stickers_hashmap) {
+    if let Err(e) = excel::write_tables(&configs, &code_to_stickers_hashmap) {
         eprintln!("Failed to write tables: {e:?}");
     }
 }

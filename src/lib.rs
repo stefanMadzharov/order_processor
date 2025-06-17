@@ -1,6 +1,7 @@
 pub mod configs;
 pub mod excel;
 pub mod parser;
+pub mod report;
 pub mod structs {
     pub mod color;
     pub mod dimensions;

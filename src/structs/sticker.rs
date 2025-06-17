@@ -63,8 +63,7 @@ impl Sticker {
             .zip(if materials.len() == dimensions.len() {
                 materials
             } else {
-                std::iter::repeat(materials[0].clone())
-                    .take(dimensions.len())
+                std::iter::repeat_n(materials[0].clone(), dimensions.len())
                     .collect()
             })
             .map(|(dimensions, material)| {

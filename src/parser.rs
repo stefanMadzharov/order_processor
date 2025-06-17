@@ -4,6 +4,7 @@ use crate::structs::{
 };
 use rayon::prelude::*;
 use regex::Regex;
+use std::{fs, path::Path};
 use strsim::normalized_levenshtein;
 
 pub fn extract_code(name: &str, code_re: &Regex) -> Result<u64, ParseStickerError> {
@@ -153,4 +154,35 @@ pub fn try_infering_code_by_description_similiarity_measure(
     } else {
         Err(error)
     }
+}
+
+const EXCLUDED_PREFIX_CHAR: char = 'C';
+
+pub fn collect_cdr_prefixes(dir: &Path) -> Vec<String> {
+    fn visit_dir(path: &Path, prefixes: &mut Vec<String>) {
+        if let Ok(entries) = fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                if entry_path.is_dir() {
+                    visit_dir(&entry_path, prefixes);
+                } else if entry_path
+                    .extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("cdr"))
+                {
+                    if let Some(file_stem) = entry_path.file_stem().and_then(|s| s.to_str()) {
+                        let upper_stem = file_stem.to_uppercase();
+                        if !upper_stem.contains("BACKUP")
+                            && !upper_stem.starts_with(EXCLUDED_PREFIX_CHAR)
+                        {
+                            prefixes.push(upper_stem.replace(" _", "_"));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let mut prefixes = Vec::new();
+    visit_dir(dir, &mut prefixes);
+    prefixes
 }

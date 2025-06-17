@@ -45,9 +45,9 @@ impl Sticker {
     ) -> Result<Vec<Self>, ParseStickerError> {
         let code = extract_code(name, code_re)?;
         let name_parts = split_at_dimensions(name, dimensions_re)?; // before and after first WxH
-        let dimensions = extract_dimensions(name_parts.1, dimensions_re);
         let description = extract_description(name_parts, code)?;
-        let material = extract_material(name_parts, material_re)?;
+        let dimensions = extract_dimensions(name_parts.1, dimensions_re);
+        let material = extract_material(name_parts.1, material_re, name)?;
         let color = extract_color(name_parts.1, color_re).unwrap_or_default();
 
         let mut stickers = vec![];

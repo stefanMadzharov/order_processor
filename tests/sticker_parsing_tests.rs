@@ -12,10 +12,10 @@ fn parse_stickers(name: &str) -> Vec<Sticker> {
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
     let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
     let material_re = Regex::new(
-        r"(?i)(?P<material>paper(?:[_ (]GR[_ )])?|LEAFLET|PP|PVC(?:[_ ]R(?:[_ ]SLV)?)?)",
+        r"(?i)PAPER(?:[_ (.]*GR[_ ).])?|LEAFLET|PP|PVC(?:[_ ().]*R(?:[_ ().]*SLV)?)?|SLV",
     )
     .unwrap();
-    let color_re = Regex::new(r"(?i)(?P<color>BLK|BLACK|RED|GREEN|BLUE)").unwrap();
+    let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap();
     Sticker::parse_stickers(name, &code_re, &dimensions_re, &material_re, &color_re).unwrap()
 }
 

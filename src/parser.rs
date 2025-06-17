@@ -54,28 +54,35 @@ pub fn extract_description(
 }
 
 pub fn extract_material(
-    name_parts: (&str, &str),
+    material_part: &str,
     material_re: &Regex,
+    name: &str,
 ) -> Result<Material, ParseStickerError> {
-    let name = format!("{}{}", name_parts.0, name_parts.1);
-    let end = name_parts.1.trim_matches(['_', ' ']);
+    let material_part = material_part
+        .replace("OK", "")
+        .replace("DV", "")
+        .replace("PF", "")
+        .replace("ST", "");
+    let material_part = material_part.trim_matches(['_', ' ', '.']);
 
-    if let Some(caps) = material_re.captures(end) {
-        caps.name("material")
-            .and_then(|m| m.as_str().parse().ok())
-            .ok_or(ParseStickerError::MissingMaterial(name))
+    let longest_match = material_re
+        .find_iter(material_part)
+        .max_by_key(|m| m.as_str().len());
+
+    if let Some(m) = longest_match {
+        m.as_str().parse()
     } else if name.contains("LEAFLET") {
         Ok(Material::LEAFLET)
     } else {
-        Err(ParseStickerError::MissingMaterial(name))
+        Err(ParseStickerError::MissingMaterial(name.to_owned()))
     }
 }
 
 pub fn extract_color(end_part: &str, color_re: &Regex) -> Option<Color> {
-    let end = end_part.trim_matches(['_', ' ']);
+    let end_part = end_part.trim_matches(['_', ' ', '.']);
 
-    if let Some(caps) = color_re.captures(end) {
-        caps.name("color").and_then(|m| m.as_str().parse().ok())
+    if let Some(m) = color_re.find(end_part) {
+        m.as_str().parse().ok()
     } else {
         None
     }
@@ -85,10 +92,10 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerErr
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
     let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
     let material_re = Regex::new(
-        r"(?i)(?P<material>paper(?:[_ (]GR[_ )])?|LEAFLET|PP|PVC(?:[_ ]R(?:[_ ]SLV)?)?)",
+        r"(?i)PAPER(?:[_ (.]*GR[_ ).])?|LEAFLET|PP|PVC(?:[_ ().]*R(?:[_ ().]*SLV)?)?|SLV",
     )
     .unwrap();
-    let color_re = Regex::new(r"(?i)(?P<color>BLK|BLACK|RED|GREEN|BLUE)").unwrap();
+    let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap();
 
     names
         .par_iter()
@@ -106,10 +113,10 @@ pub fn try_infering_code_by_description_similiarity_measure(
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
     let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
     let material_re = Regex::new(
-        r"(?i)(?P<material>paper(?:[_ (]GR[_ )])?|LEAFLET|PP|PVC(?:[_ ]R(?:[_ ]SLV)?)?)",
+        r"(?i)PAPER(?:[_ (.]*GR[_ ).])?|LEAFLET|PP|PVC(?:[_ ().]*R(?:[_ ().]*SLV)?)?|SLV",
     )
     .unwrap();
-    let color_re = Regex::new(r"(?i)(?P<color>BLK|BLACK|RED|GREEN|BLUE)").unwrap();
+    let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLU").unwrap();
 
     if let ParseStickerError::MissingCode(name) = &error {
         let error_description = split_at_dimensions(name, &dimensions_re)?

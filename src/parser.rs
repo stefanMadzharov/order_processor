@@ -47,8 +47,14 @@ pub fn extract_description(
     name_parts
         .0
         .split_once(code.to_string().as_str())
-        .map(|(_, tail)| tail.trim_matches(['_', ' '].as_ref()).to_string())
-        .filter(|s| !s.is_empty())
+        .map(|(_, tail)| tail.trim_matches(['_', ' ']).to_string())
+        .filter(|desc| !desc.is_empty())
+        .map(|mut desc| {
+            if name_parts.1.contains("PROMO") {
+                desc.push_str(" PROMO");
+            }
+            desc
+        })
         .ok_or_else(|| {
             ParseStickerError::MissingDescription(format!("{}{}", name_parts.0, name_parts.1))
         })

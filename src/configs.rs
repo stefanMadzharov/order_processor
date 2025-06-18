@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 pub struct Configs {
     pub archive_path: PathBuf,
     pub order_path: PathBuf,
-    pub dimensions_path: PathBuf,
     pub sheet_name: Option<String>,
     pub order_amount_column_name: Option<String>,
     pub inferring_levenshtein_distance: f64,
@@ -24,7 +23,6 @@ impl Configs {
 
         let mut archive_path: Option<PathBuf> = None;
         let mut order_path: Option<PathBuf> = None;
-        let mut dimensions_path = Some(PathBuf::from("./dimensions.txt"));
         let mut inferring_levenshtein_distance: f64 = DEFAULT_INFERRING_LEVENSHTEIN_DISTANCE;
         let mut error_output_levenshtein_distance: f64 = DEFAULT_ERROR_OUTPUT_LEVENSHTEIN_DISTANCE;
         let mut sheet_name: Option<String> = None;
@@ -38,7 +36,6 @@ impl Configs {
                 match key {
                     "archive" => archive_path = Some(PathBuf::from(value)),
                     "order" => order_path = Some(PathBuf::from(value)),
-                    "dimensions" => dimensions_path = Some(PathBuf::from(value)),
                     "inferring_levenshtein_distance" => {
                         inferring_levenshtein_distance = value.parse().unwrap_or_else(|_| {
                             panic!(
@@ -68,17 +65,12 @@ impl Configs {
 
         let archive_path = archive_path.expect("Missing 'archive' key in config file");
         let order_path = order_path.expect("Missing 'order' key in config file");
-        let dimensions_path = dimensions_path.expect("Missing 'dimensions' key in config file");
 
         if !archive_path.is_dir() {
             panic!(
                 "'archive' path is not a valid directory: {:?}",
                 archive_path
             );
-        }
-
-        if !dimensions_path.is_file() {
-            panic!("'{:?}' path is not a valid text file", dimensions_path);
         }
 
         if !order_path.is_file()
@@ -112,7 +104,6 @@ impl Configs {
         Configs {
             archive_path,
             order_path,
-            dimensions_path,
             sheet_name,
             order_amount_column_name,
             inferring_levenshtein_distance,

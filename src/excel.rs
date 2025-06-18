@@ -208,6 +208,13 @@ pub fn write_sizes_table(
                             }
                             f
                         }
+                        1 => {
+                            let mut f = base_format.clone();
+                            if sticker.description.contains("PROMO") {
+                                f.set_bg_color(FormatColor::Red);
+                            }
+                            f
+                        }
                         2 => {
                             let mut f = Format::from(sticker.material.clone());
                             f.set_border(FormatBorder::Thin);

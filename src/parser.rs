@@ -53,6 +53,9 @@ pub fn extract_description(
             if name_parts.1.contains("PROMO") {
                 desc.push_str(" PROMO");
             }
+            if name_parts.1.contains("TESTER") {
+                desc.push_str(" TESTER");
+            }
             desc
         })
         .ok_or_else(|| {
@@ -99,7 +102,7 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerErr
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
     let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
     let material_re = Regex::new(
-        r"(?i)PAPER(?:[_ (.]*GR[_ ).])?|LEAFLET|PP|PVC(?:[_ ().]*R(?:[_ ().]*SLV)?)?|SLV",
+        r"(?i)(PAPER([_ ().&-]+GR)?|LEAFLET|PP|PVC([_ ().&-]+R([_ ().&-]+SLV)?)?|SLV)([_ ().&-]+|$)",
     )
     .unwrap();
     let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap();
@@ -120,7 +123,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
     let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
     let material_re = Regex::new(
-        r"(?i)PAPER(?:[_ (.]*GR[_ ).])?|LEAFLET|PP|PVC(?:[_ ().]*R(?:[_ ().]*SLV)?)?|SLV",
+        r"(?i)(PAPER([_ ().&-]+GR)?|LEAFLET|PP|PVC([_ ().&-]+R([_ ().&-]+SLV)?)?|SLV)([_ ().&-]+|$)",
     )
     .unwrap();
     let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLU").unwrap();
@@ -148,7 +151,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
                     &material_re,
                     &color_re,
                 )
-                .unwrap()
+                .unwrap_or_default()
             })
             .collect();
 

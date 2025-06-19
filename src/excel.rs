@@ -210,7 +210,9 @@ pub fn write_sizes_table(
                         }
                         1 => {
                             let mut f = base_format.clone();
-                            if sticker.description.contains("PROMO") {
+                            if sticker.description.contains("PROMO")
+                                || sticker.description.contains("TESTER")
+                            {
                                 f.set_bg_color(FormatColor::Red);
                             }
                             f

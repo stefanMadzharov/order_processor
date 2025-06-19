@@ -12,7 +12,7 @@ fn parse_stickers(name: &str) -> Vec<Sticker> {
     let code_re = Regex::new(r"^(\d{3,})").unwrap();
     let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
     let material_re = Regex::new(
-        r"(?i)PAPER(?:[_ (.]*GR[_ ).])?|LEAFLET|PP|PVC(?:[_ ().]*R(?:[_ ().]*SLV)?)?|SLV",
+        r"(?i)(PAPER([_ ().&-]+GR)?|LEAFLET|PP|PVC([_ ().&-]+R([_ ().&-]+SLV)?)?|SLV)([_ ().&-]+|$)",
     )
     .unwrap();
     let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap();
@@ -289,6 +289,24 @@ fn test_273656() {
     assert_eq!(s[0].code, 273656);
     assert_eq!(s[0].dimensions, "40x60".parse::<Dimensions>().unwrap());
     assert_eq!(s[0].material, Material::PVC);
+    assert_eq!(s[0].text_color, Color::Black);
+}
+
+#[test]
+fn test_269226() {
+    let s = parse_stickers("269226_ULTRA FLUIDE_RADIANCE_80X25_PVC_REGULJAREN_OK");
+    assert_eq!(s[0].code, 269226);
+    assert_eq!(s[0].dimensions, "80x25".parse::<Dimensions>().unwrap());
+    assert_eq!(s[0].material, Material::PVC);
+    assert_eq!(s[0].text_color, Color::Black);
+}
+
+#[test]
+fn test_268175() {
+    let s = parse_stickers("268175_DU KELUAL SQUANORM OILY SHP 200ML_50X30_PVC-R");
+    assert_eq!(s[0].code, 268175);
+    assert_eq!(s[0].dimensions, "50x30".parse::<Dimensions>().unwrap());
+    assert_eq!(s[0].material, Material::PVCR);
     assert_eq!(s[0].text_color, Color::Black);
 }
 

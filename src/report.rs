@@ -1,9 +1,9 @@
 use crate::{configs::Configs, excel, structs::parse_stcker_error::ParseStickerError};
 use colored::*;
-use std::fmt::Write;
+use std::{collections::HashMap, fmt::Write};
 use strsim::normalized_levenshtein;
 
-pub fn print_errors(errors: &[ParseStickerError], configs: &Configs) {
+pub fn print_relevant_errors(errors: &[ParseStickerError], configs: &Configs) {
     let orders = match excel::parse_orders(configs) {
         Ok(orders) => orders,
         Err(e) => {
@@ -94,5 +94,30 @@ pub fn print_errors(errors: &[ParseStickerError], configs: &Configs) {
 
             eprintln!("{}", "_".repeat(100).dimmed());
         }
+    }
+}
+
+#[cfg(debug_assertions)]
+pub fn print_errors_grouped_by_type(errors: &[ParseStickerError]) {
+    let mut grouped: HashMap<String, Vec<&ParseStickerError>> = HashMap::new();
+
+    for error in errors {
+        let key = error.to_string();
+        grouped.entry(key).or_default().push(error);
+    }
+
+    eprintln!(
+        "\n{}\n",
+        "All Errors Grouped by Type".underline().bold().blue()
+    );
+
+    for (error_type, group) in grouped {
+        eprintln!("{} {}", "•".red(), error_type.bold().green());
+
+        for error in group {
+            eprintln!("\t{}: {}", "↳".dimmed(), error.get_description().yellow());
+        }
+
+        eprintln!("{}", "-".repeat(60).dimmed());
     }
 }

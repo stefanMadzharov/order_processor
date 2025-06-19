@@ -149,7 +149,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
     }
 }
 
-const EXCLUDED_PREFIX_CHAR: char = 'C';
+const EXCLUDED_PREFIX_CHARS: &[char] = &['C', 'С'];
 
 pub fn collect_cdr_prefixes(dir: &Path) -> Vec<String> {
     fn visit_dir(path: &Path, prefixes: &mut Vec<String>) {
@@ -165,7 +165,7 @@ pub fn collect_cdr_prefixes(dir: &Path) -> Vec<String> {
                     if let Some(file_stem) = entry_path.file_stem().and_then(|s| s.to_str()) {
                         let upper_stem = file_stem.to_uppercase();
                         if !upper_stem.contains("BACKUP")
-                            && !upper_stem.starts_with(EXCLUDED_PREFIX_CHAR)
+                            && !upper_stem.starts_with(EXCLUDED_PREFIX_CHARS)
                         {
                             prefixes.push(upper_stem.replace(" _", "_"));
                         }

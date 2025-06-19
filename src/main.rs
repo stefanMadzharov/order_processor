@@ -57,10 +57,14 @@ fn main() {
     }
 
     if !unrecoverable_errors.is_empty() {
-        report::print_errors(&unrecoverable_errors, &configs);
+        report::print_relevant_errors(&unrecoverable_errors, &configs);
     }
 
     if let Err(e) = excel::write_tables(&configs, &code_to_stickers_map) {
         eprintln!("Failed to write tables: {e:?}");
     }
+
+    // output all errors to see what kind of problems there are in the archive (also debugging)
+    #[cfg(debug_assertions)]
+    report::print_errors_grouped_by_type(&unrecoverable_errors);
 }

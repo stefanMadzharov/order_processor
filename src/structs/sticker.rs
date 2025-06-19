@@ -3,9 +3,8 @@ use super::{
 };
 use crate::parser::{
     extract_code, extract_color, extract_description, extract_dimensions, extract_material,
-    split_at_dimensions,
+    split_at_dimensions, DIMENSIONS_RE,
 };
-use regex::Regex;
 
 #[derive(Debug, Clone, Eq)]
 pub struct Sticker {
@@ -36,22 +35,16 @@ impl Sticker {
         }
     }
 
-    pub fn parse_stickers(
-        name: &str,
-        code_re: &Regex,
-        dimensions_re: &Regex,
-        material_re: &Regex,
-        color_re: &Regex,
-    ) -> Result<Vec<Self>, ParseStickerError> {
-        let code = extract_code(name, code_re)?;
-        let name_parts = split_at_dimensions(name, dimensions_re)?; // before and after first WxH
+    pub fn parse_stickers(name: &str) -> Result<Vec<Self>, ParseStickerError> {
+        let code = extract_code(name)?;
+        let name_parts = split_at_dimensions(name)?; // before and after first WxH
         let description = extract_description(name_parts, code)?;
-        let dimensions = extract_dimensions(name_parts.1, dimensions_re);
-        let materials: Vec<Material> = dimensions_re
+        let dimensions = extract_dimensions(name_parts.1);
+        let materials: Vec<Material> = DIMENSIONS_RE
             .split(name_parts.1)
-            .filter_map(|material_part| extract_material(material_part, material_re, name).ok())
+            .filter_map(|material_part| extract_material(material_part, name).ok())
             .collect();
-        let color = extract_color(name_parts.1, color_re).unwrap_or_default();
+        let color = extract_color(name_parts.1).unwrap_or_default();
 
         if materials.is_empty() {
             return Err(ParseStickerError::MissingMaterial(name.to_owned()));
@@ -63,8 +56,7 @@ impl Sticker {
             .zip(if materials.len() == dimensions.len() {
                 materials
             } else {
-                std::iter::repeat_n(materials[0].clone(), dimensions.len())
-                    .collect()
+                std::iter::repeat_n(materials[0].clone(), dimensions.len()).collect()
             })
             .map(|(dimensions, material)| {
                 Self::new(

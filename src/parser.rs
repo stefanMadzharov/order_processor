@@ -2,13 +2,26 @@ use crate::structs::{
     color::Color, dimensions::Dimensions, material::Material,
     parse_stcker_error::ParseStickerError, sticker::Sticker,
 };
+use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
 use std::{fs, path::Path};
 use strsim::normalized_levenshtein;
 
-pub fn extract_code(name: &str, code_re: &Regex) -> Result<u64, ParseStickerError> {
-    code_re
+// use Lazy to build the regexes only once and still keep the helper functions clean
+pub static CODE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{3,})").unwrap());
+pub static DIMENSIONS_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\d+[ХX]\d+").unwrap());
+pub static MATERIAL_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(
+        r"(?i)(PAPER([_ ().&-]+GR)?|LEAFLET|PP|PVC([_ ().&-]+R([_ ().&-]+SLV)?)?|SLV)([_ ().&-]+|$)",
+    )
+    .unwrap()
+});
+pub static COLOR_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap());
+
+pub fn extract_code(name: &str) -> Result<u64, ParseStickerError> {
+    CODE_RE
         .captures(name)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().parse::<u64>())
@@ -17,11 +30,8 @@ pub fn extract_code(name: &str, code_re: &Regex) -> Result<u64, ParseStickerErro
         .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))
 }
 
-pub fn split_at_dimensions<'a>(
-    name: &'a str,
-    dimensions_re: &Regex,
-) -> Result<(&'a str, &'a str), ParseStickerError> {
-    let output = dimensions_re
+pub fn split_at_dimensions<'a>(name: &'a str) -> Result<(&'a str, &'a str), ParseStickerError> {
+    let output = DIMENSIONS_RE
         .find_iter(name)
         .find_map(|m| {
             m.as_str()
@@ -33,8 +43,8 @@ pub fn split_at_dimensions<'a>(
     output
 }
 
-pub fn extract_dimensions(end_string: &str, dimensions_re: &Regex) -> Vec<Dimensions> {
-    dimensions_re
+pub fn extract_dimensions(end_string: &str) -> Vec<Dimensions> {
+    DIMENSIONS_RE
         .find_iter(end_string)
         .filter_map(|m| m.as_str().parse::<Dimensions>().ok())
         .collect()
@@ -63,11 +73,7 @@ pub fn extract_description(
         })
 }
 
-pub fn extract_material(
-    material_part: &str,
-    material_re: &Regex,
-    name: &str,
-) -> Result<Material, ParseStickerError> {
+pub fn extract_material(material_part: &str, name: &str) -> Result<Material, ParseStickerError> {
     let material_part = material_part
         .replace("OK", "")
         .replace("DV", "")
@@ -75,7 +81,7 @@ pub fn extract_material(
         .replace("ST", "");
     let material_part = material_part.trim_matches(['_', ' ', '.']);
 
-    let longest_match = material_re
+    let longest_match = MATERIAL_RE
         .find_iter(material_part)
         .max_by_key(|m| m.as_str().len());
 
@@ -88,10 +94,10 @@ pub fn extract_material(
     }
 }
 
-pub fn extract_color(end_part: &str, color_re: &Regex) -> Option<Color> {
+pub fn extract_color(end_part: &str) -> Option<Color> {
     let end_part = end_part.trim_matches(['_', ' ', '.']);
 
-    if let Some(m) = color_re.find(end_part) {
+    if let Some(m) = COLOR_RE.find(end_part) {
         m.as_str().parse().ok()
     } else {
         None
@@ -99,19 +105,9 @@ pub fn extract_color(end_part: &str, color_re: &Regex) -> Option<Color> {
 }
 
 pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerError>> {
-    let code_re = Regex::new(r"^(\d{3,})").unwrap();
-    let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
-    let material_re = Regex::new(
-        r"(?i)(PAPER([_ ().&-]+GR)?|LEAFLET|PP|PVC([_ ().&-]+R([_ ().&-]+SLV)?)?|SLV)([_ ().&-]+|$)",
-    )
-    .unwrap();
-    let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap();
-
     names
         .par_iter()
-        .map(|name| {
-            Sticker::parse_stickers(name, &code_re, &dimensions_re, &material_re, &color_re)
-        })
+        .map(|name| Sticker::parse_stickers(name))
         .collect()
 }
 
@@ -120,16 +116,8 @@ pub fn try_infering_code_by_description_similiarity_measure(
     parsed_stickers: &[Sticker],
     levenshtein_distance_bound: f64,
 ) -> Result<Vec<Sticker>, ParseStickerError> {
-    let code_re = Regex::new(r"^(\d{3,})").unwrap();
-    let dimensions_re = Regex::new(r"\d+[ХX]\d+").unwrap();
-    let material_re = Regex::new(
-        r"(?i)(PAPER([_ ().&-]+GR)?|LEAFLET|PP|PVC([_ ().&-]+R([_ ().&-]+SLV)?)?|SLV)([_ ().&-]+|$)",
-    )
-    .unwrap();
-    let color_re = Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLU").unwrap();
-
     if let ParseStickerError::MissingCode(name) = &error {
-        let error_description = split_at_dimensions(name, &dimensions_re)?
+        let error_description = split_at_dimensions(name)?
             .0
             .trim_matches(['_', ' '].as_ref());
 
@@ -146,10 +134,6 @@ pub fn try_infering_code_by_description_similiarity_measure(
             .flat_map(|(i, _)| {
                 Sticker::parse_stickers(
                     (parsed_stickers[i].code.clone().to_string() + name).as_str(),
-                    &code_re,
-                    &dimensions_re,
-                    &material_re,
-                    &color_re,
                 )
                 .unwrap_or_default()
             })

@@ -461,6 +461,7 @@ dependencies = [
  "colored",
  "either",
  "itertools 0.14.0",
+ "once_cell",
  "rayon",
  "regex",
  "strsim",

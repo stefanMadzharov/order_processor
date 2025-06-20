@@ -2,22 +2,22 @@ use crate::structs::{
     color::Color, dimensions::Dimensions, material::Material,
     parse_stcker_error::ParseStickerError, sticker::Sticker,
 };
-use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
+use std::sync::LazyLock;
 use std::{fs, path::Path};
 
 // use Lazy to build the regexes only once and still keep the helper functions clean
-pub static CODE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{3,})").unwrap());
-pub static DIMENSIONS_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\d+[ХX]\d+").unwrap());
-pub static MATERIAL_RE: Lazy<Regex> = Lazy::new(|| {
+pub static CODE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{3,})").unwrap());
+pub static DIMENSIONS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\d+[ХX]\d+").unwrap());
+pub static MATERIAL_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
         r"(?i)(PAPER([_ ().&-]+GR)?|LEAFLET|PP|PVC([_ ().&-]+R([_ ().&-]+SLV)?)?|SLV)([_ ().&-]+|$)",
     )
     .unwrap()
 });
-pub static COLOR_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap());
+pub static COLOR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap());
 
 pub fn extract_code(name: &str) -> Result<u64, ParseStickerError> {
     CODE_RE
@@ -114,7 +114,7 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerErr
 use strsim::normalized_levenshtein;
 #[cfg(any(feature = "error_handling", not(feature = "no_inferring")))]
 pub fn try_infering_code_by_description_similiarity_measure(
-    error: ParseStickerError,
+    error: &ParseStickerError,
     parsed_stickers: &[Sticker],
     levenshtein_distance_bound: f64,
 ) -> Result<Vec<Sticker>, ParseStickerError> {
@@ -124,7 +124,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
             .trim_matches(['_', ' '].as_ref());
 
         let similar_stickers: Vec<Sticker> = parsed_stickers
-            .iter()
+            .par_iter()
             .enumerate()
             .map(|(i, sticker)| {
                 (
@@ -142,12 +142,12 @@ pub fn try_infering_code_by_description_similiarity_measure(
             .collect();
 
         if similar_stickers.is_empty() {
-            Err(error)
+            Err(error.clone())
         } else {
             Ok(similar_stickers)
         }
     } else {
-        Err(error)
+        Err(error.clone())
     }
 }
 

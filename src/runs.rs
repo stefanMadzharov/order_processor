@@ -2,7 +2,13 @@
 use crate::{report, structs::parse_stcker_error::ParseStickerError};
 #[cfg(feature = "error_handling")]
 use either::Either;
-#[cfg(feature = "error_handling")]
+#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+use rayon::prelude::*;
+
+#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+use std::sync::Mutex;
+
+#[cfg(all(feature = "error_handling", feature = "no_inferring"))]
 use itertools::Itertools;
 
 use crate::{configs::Configs, excel, parser, structs::sticker::Sticker};
@@ -18,35 +24,46 @@ pub fn run_inferring() {
     let file_names = parser::collect_cdr_prefixes(&configs.archive_path);
     let parsing_results = parser::parse_names(&file_names);
 
-    let (stickers_nested, errors): (Vec<Vec<Sticker>>, Vec<ParseStickerError>) =
-        parsing_results.into_iter().partition_map(|res| match res {
+    let (stickers_nested, errors): (Vec<Vec<Sticker>>, Vec<ParseStickerError>) = parsing_results
+        .into_par_iter()
+        .partition_map(|res| match res {
             Ok(sticker) => Either::Left(sticker),
             Err(error) => Either::Right(error),
         });
 
     let mut stickers: Vec<Sticker> = stickers_nested.into_iter().flatten().collect();
-    let mut unrecoverable_errors = Vec::new();
 
-    for error in errors {
-        match error {
-            ParseStickerError::MissingCode(_) => {
-                match parser::try_infering_code_by_description_similiarity_measure(
-                    error,
-                    &stickers,
-                    configs.inferring_levenshtein_distance,
-                ) {
-                    Ok(mut inferred_stickers) => {
-                        for sticker in &mut inferred_stickers {
-                            sticker.description.push_str(INFERRED_MARKER);
-                        }
-                        stickers.extend(inferred_stickers);
+    let inferred_stickers_mutex = Mutex::new(Vec::new());
+    let unrecoverable_errors_mutex = Mutex::new(Vec::new());
+
+    errors.par_iter().for_each(|error| match error {
+        ParseStickerError::MissingCode(_) => {
+            match parser::try_infering_code_by_description_similiarity_measure(
+                error,
+                &stickers,
+                configs.inferring_levenshtein_distance,
+            ) {
+                Ok(mut inferred) => {
+                    for sticker in &mut inferred {
+                        sticker.description.push_str(INFERRED_MARKER);
                     }
-                    Err(e) => unrecoverable_errors.push(e),
+                    inferred_stickers_mutex.lock().unwrap().extend(inferred);
+                }
+                Err(e) => {
+                    unrecoverable_errors_mutex.lock().unwrap().push(e);
                 }
             }
-            other => unrecoverable_errors.push(other),
         }
-    }
+        other => {
+            unrecoverable_errors_mutex
+                .lock()
+                .unwrap()
+                .push(other.clone());
+        }
+    });
+
+    stickers.extend(inferred_stickers_mutex.into_inner().unwrap());
+    let unrecoverable_errors = unrecoverable_errors_mutex.into_inner().unwrap();
 
     stickers.sort_by(|a, b| a.code.cmp(&b.code));
     stickers.dedup();

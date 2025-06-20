@@ -363,7 +363,7 @@ mod tests {
         );
 
         let result =
-            parser::try_infering_code_by_description_similiarity_measure(error, &existing, 0.93);
+            parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_ok());
         assert_eq!(result.unwrap()[0].code, 234191);
     }
@@ -379,7 +379,7 @@ mod tests {
         );
 
         let result =
-            parser::try_infering_code_by_description_similiarity_measure(error, &existing, 0.93);
+            parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_ok());
         assert_eq!(result.unwrap()[0].code, 234191);
     }
@@ -395,7 +395,7 @@ mod tests {
         );
 
         let result =
-            parser::try_infering_code_by_description_similiarity_measure(error, &existing, 0.93);
+            parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_ok());
         assert_eq!(result.unwrap()[0].code, 234191);
     }
@@ -411,7 +411,7 @@ mod tests {
         );
 
         let result =
-            parser::try_infering_code_by_description_similiarity_measure(error, &existing, 0.93);
+            parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_err());
     }
 
@@ -425,7 +425,7 @@ mod tests {
             ParseStickerError::MissingCode("FACE WASH FOAM FOR MEN_50X50_PVC_R_OK_PF".into());
 
         let result =
-            parser::try_infering_code_by_description_similiarity_measure(error, &existing, 0.93);
+            parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_err());
     }
 

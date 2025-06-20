@@ -1,5 +1,6 @@
 pub mod configs;
 pub mod excel;
+#[cfg(feature = "material_report")]
 pub mod order_summary;
 pub mod parser;
 #[cfg(feature = "error_handling")]

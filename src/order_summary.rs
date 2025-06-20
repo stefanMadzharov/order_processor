@@ -3,6 +3,7 @@ use crate::{
     excel::parse_orders,
     structs::{dimensions::Dimensions, material::Material, sticker::Sticker},
 };
+use colored::*;
 use std::{collections::HashMap, fs::File, io::Write};
 
 fn group_material(material: &Material) -> &'static str {
@@ -32,7 +33,12 @@ pub fn generate_material_report_for_orders(
             missing_stickers += 1;
         }
     }
-    eprintln!("Missing sticker files: {missing_stickers}");
+
+    eprintln!(
+        "\n{}: {}\n",
+        "Missing sticker files".underline().bold().blue(),
+        missing_stickers.to_string().yellow(),
+    );
 
     let mut output = String::new();
     output.push_str("Needed Stickers Report\n");

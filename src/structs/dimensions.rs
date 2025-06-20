@@ -3,7 +3,7 @@ use std::str::FromStr;
 // import the genereted during build time official dimensions
 include!(concat!(env!("OUT_DIR"), "/generated_dimensions.rs"));
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Dimensions {
     pub width: u32,
     pub height: u32,

@@ -87,6 +87,13 @@ pub fn run_inferring() {
     // output all errors to see what kind of problems there are in the archive (also debugging)
     #[cfg(feature = "full_error_handling")]
     report::print_errors_grouped_by_type(&unrecoverable_errors);
+
+    #[cfg(feature = "material_report")]
+    if let Err(e) =
+        crate::order_summary::generate_material_report_for_orders(&configs, &code_to_stickers_map)
+    {
+        eprintln!("Failed to write materials: {e:?}");
+    }
 }
 
 #[cfg(all(feature = "error_handling", feature = "no_inferring"))]
@@ -126,6 +133,13 @@ pub fn run_no_inferring() {
     // output all errors to see what kind of problems there are in the archive (also debugging)
     #[cfg(feature = "full_error_handling")]
     report::print_errors_grouped_by_type(&errors);
+
+    #[cfg(feature = "material_report")]
+    if let Err(e) =
+        crate::order_summary::generate_material_report_for_orders(&configs, &code_to_stickers_map)
+    {
+        eprintln!("Failed to write materials: {e:?}");
+    }
 }
 
 #[cfg(not(feature = "error_handling"))]
@@ -153,5 +167,12 @@ pub fn run_optimized() {
 
     if let Err(e) = excel::write_tables(&configs, &code_to_stickers_map) {
         eprintln!("Failed to write tables: {e:?}");
+    }
+
+    #[cfg(feature = "material_report")]
+    if let Err(e) =
+        crate::order_summary::generate_material_report_for_orders(&configs, &code_to_stickers_map)
+    {
+        eprintln!("Failed to write materials: {e:?}");
     }
 }

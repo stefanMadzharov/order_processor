@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["error_handling"]
+default = ["error_handling", "material_report"]
 benchmark = ["pprof"]
 error_handling = []
 full_error_handling = ["error_handling"]
 no_inferring = []
+material_report = []
 
 [dependencies]
 calamine = "0.26.0"

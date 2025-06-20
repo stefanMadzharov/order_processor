@@ -3,6 +3,7 @@ use colored::*;
 use std::{collections::HashMap, fmt::Write};
 use strsim::normalized_levenshtein;
 
+#[cfg(feature = "error_handling")]
 pub fn print_relevant_errors(errors: &[ParseStickerError], configs: &Configs) {
     let orders = match excel::parse_orders(configs) {
         Ok(orders) => orders,
@@ -97,7 +98,7 @@ pub fn print_relevant_errors(errors: &[ParseStickerError], configs: &Configs) {
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "error_handling")]
 pub fn print_errors_grouped_by_type(errors: &[ParseStickerError]) {
     let mut grouped: HashMap<String, Vec<&ParseStickerError>> = HashMap::new();
 

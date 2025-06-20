@@ -6,7 +6,6 @@ use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
 use std::{fs, path::Path};
-use strsim::normalized_levenshtein;
 
 // use Lazy to build the regexes only once and still keep the helper functions clean
 pub static CODE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{3,})").unwrap());
@@ -30,7 +29,7 @@ pub fn extract_code(name: &str) -> Result<u64, ParseStickerError> {
         .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))
 }
 
-pub fn split_at_dimensions<'a>(name: &'a str) -> Result<(&'a str, &'a str), ParseStickerError> {
+pub fn split_at_dimensions(name: &str) -> Result<(&str, &str), ParseStickerError> {
     let output = DIMENSIONS_RE
         .find_iter(name)
         .find_map(|m| {
@@ -111,6 +110,9 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerErr
         .collect()
 }
 
+#[cfg(any(feature = "error_handling", not(feature = "no_inferring")))]
+use strsim::normalized_levenshtein;
+#[cfg(any(feature = "error_handling", not(feature = "no_inferring")))]
 pub fn try_infering_code_by_description_similiarity_measure(
     error: ParseStickerError,
     parsed_stickers: &[Sticker],

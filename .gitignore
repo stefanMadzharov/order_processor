@@ -4,6 +4,7 @@
 
 configs.txt
 dvoini.txt
+flamegraph.svg
 .DS_Store
 *.xlsx
 *.xls

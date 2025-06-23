@@ -110,9 +110,9 @@ pub fn parse_names(names: &[String]) -> Vec<Result<Vec<Sticker>, ParseStickerErr
         .collect()
 }
 
-#[cfg(any(feature = "error_handling", not(feature = "no_inferring")))]
+#[cfg(any(feature = "error_handling", feature = "inferring"))]
 use strsim::normalized_levenshtein;
-#[cfg(any(feature = "error_handling", not(feature = "no_inferring")))]
+#[cfg(any(feature = "error_handling", feature = "inferring"))]
 pub fn try_infering_code_by_description_similiarity_measure(
     error: &ParseStickerError,
     parsed_stickers: &[Sticker],

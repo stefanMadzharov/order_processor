@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["error_handling", "material_report"]
+default = ["error_handling", "inferring", "material_report"]
 error_handling = []
-full_error_handling = ["error_handling"]
-no_inferring = []
+full_error_handling = ["error_handling", "inferring"]
+inferring = ["error_handling"]
 material_report = []
 
 [dependencies]

@@ -2,22 +2,22 @@
 use crate::{report, structs::parse_stcker_error::ParseStickerError};
 #[cfg(feature = "error_handling")]
 use either::Either;
-#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+#[cfg(all(feature = "error_handling", feature = "inferring"))]
 use rayon::prelude::*;
 
-#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+#[cfg(all(feature = "error_handling", feature = "inferring"))]
 use std::sync::Mutex;
 
-#[cfg(all(feature = "error_handling", feature = "no_inferring"))]
+#[cfg(all(feature = "error_handling", not(feature = "inferring")))]
 use itertools::Itertools;
 
 use crate::{configs::Configs, excel, parser, structs::sticker::Sticker};
 use std::collections::HashMap;
 
-#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+#[cfg(all(feature = "error_handling", feature = "inferring"))]
 const INFERRED_MARKER: &str = " !!!INFERRED!!!";
 
-#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+#[cfg(all(feature = "error_handling", feature = "inferring"))]
 pub fn run_inferring() {
     let configs = Configs::load_from_file("configs.txt");
 
@@ -96,7 +96,7 @@ pub fn run_inferring() {
     }
 }
 
-#[cfg(all(feature = "error_handling", feature = "no_inferring"))]
+#[cfg(all(feature = "error_handling", not(feature = "inferring")))]
 pub fn run_no_inferring() {
     let configs = Configs::load_from_file("configs.txt");
 

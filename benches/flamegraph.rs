@@ -8,14 +8,14 @@ pub fn main() {
         .profile_time(Some(Duration::new(2, 0)))
         .with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
 
-    #[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+    #[cfg(all(feature = "error_handling", feature = "inferring"))]
     c.bench_function("run_inferring", |b| {
         b.iter(|| {
             runs::run_inferring();
         });
     });
 
-    #[cfg(all(feature = "error_handling", feature = "no_inferring"))]
+    #[cfg(all(feature = "error_handling", not(feature = "inferring")))]
     c.bench_function("run_no_inferring", |b| {
         b.iter(|| {
             runs::run_no_inferring();

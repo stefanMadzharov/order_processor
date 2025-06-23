@@ -32,3 +32,7 @@ required-features = ["error_handling"]
 [[bench]]
 name = "benchmark"
 harness = false
+
+[[bench]]
+name = "flamegraph"
+harness = false

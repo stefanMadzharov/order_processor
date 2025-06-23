@@ -1,26 +1,55 @@
+#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+use std::time::Duration;
+
 use criterion::{criterion_group, criterion_main, Criterion};
 use order_processor::runs;
-use pprof::criterion::{Output, PProfProfiler};
 
-pub fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("run_with_inferring", |b| {
+#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
+fn run_inferring(c: &mut Criterion) {
+    c.bench_function("run_inferring", |b| {
         b.iter(|| {
-            #[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
             runs::run_inferring();
-            #[cfg(all(feature = "error_handling", feature = "no_inferring"))]
+        });
+    });
+}
+
+#[cfg(all(feature = "error_handling", feature = "no_inferring"))]
+fn run_no_inferring(c: &mut Criterion) {
+    c.bench_function("run_no_inferring", |b| {
+        b.iter(|| {
             runs::run_no_inferring();
-            #[cfg(not(feature = "error_handling"))]
+        });
+    });
+}
+
+#[cfg(not(feature = "error_handling"))]
+fn run_optimized(c: &mut Criterion) {
+    c.bench_function("run_optimized", |b| {
+        b.iter(|| {
             runs::run_optimized();
         });
     });
 }
 
+#[cfg(all(feature = "error_handling", not(feature = "no_inferring")))]
 criterion_group! {
     name = benches;
-    config = Criterion::default()
-        .sample_size(50)
-        .measurement_time(std::time::Duration::new(30,0))
-        .with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
-    targets = criterion_benchmark
+    config = Criterion::default().measurement_time(Duration::new(6,500));
+    targets = run_inferring
 }
+
+#[cfg(all(feature = "error_handling", feature = "no_inferring"))]
+criterion_group! {
+    name = benches;
+    config = Criterion::default().measurement_time(Duration::new(6,500));
+    targets = run_no_inferring
+}
+
+#[cfg(not(feature = "error_handling"))]
+criterion_group! {
+    name = benches;
+    config = Criterion::default().measurement_time(Duration::new(6,500));
+    targets = run_optimized
+}
+
 criterion_main!(benches);

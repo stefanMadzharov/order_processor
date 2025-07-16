@@ -107,31 +107,33 @@ fn extract_orders(
     let mut started = false;
 
     for row in (start_row + 1)..range.height() {
-        let code_opt = get_u64_from_cell(range.get((row, col_code)));
-
-        match code_opt {
-            Some(code) => {
-                started = true;
-
-                let amount = get_u64_from_cell(range.get((row, col_amount)))
-                    .ok_or_else(|| format!("Invalid value in amount column at row {row}"))?;
-
-                let description = range
-                    .get((row, col_description))
-                    .and_then(|cell| cell.get_string())
-                    .unwrap_or("")
-                    .trim()
-                    .to_string();
-
-                result.push(Order {
-                    code,
-                    amount,
-                    description,
-                });
+        let code: String;
+        if let Some(code_str) = range.get((row, col_code)) {
+            code = code_str.to_string();
+            started = true;
+        } else {
+            if started {
+                break;
+            } else {
+                continue;
             }
-            None if started => break,
-            None => continue,
         }
+
+        let amount = get_u64_from_cell(range.get((row, col_amount)))
+            .ok_or_else(|| format!("Invalid value in amount column at row {row}"))?;
+
+        let description = range
+            .get((row, col_description))
+            .and_then(|cell| cell.get_string())
+            .unwrap_or("")
+            .trim()
+            .to_string();
+
+        result.push(Order {
+            code,
+            amount,
+            description,
+        });
     }
 
     Ok(result)
@@ -149,7 +151,7 @@ fn get_u64_from_cell(cell: Option<&Data>) -> Option<u64> {
 pub fn write_sizes_table(
     workbook: &mut Workbook,
     orders: &[Order],
-    code_to_stickers: &HashMap<u64, Vec<Sticker>>,
+    code_to_stickers: &HashMap<String, Vec<Sticker>>,
 ) -> Result<(), XlsxError> {
     let mut sheet = workbook.add_worksheet(Some("sizes"))?;
 
@@ -250,7 +252,7 @@ pub fn write_sizes_table(
 pub fn write_missing_table(
     workbook: &mut Workbook,
     missing_orders: &[Order],
-    code_to_stickers: &HashMap<u64, Vec<Sticker>>,
+    code_to_stickers: &HashMap<String, Vec<Sticker>>,
 ) -> Result<(), XlsxError> {
     let mut sheet = workbook.add_worksheet(Some("missing"))?;
 
@@ -296,7 +298,7 @@ pub fn write_missing_table(
 
 pub fn write_tables(
     configs: &Configs,
-    code_to_stickers: &HashMap<u64, Vec<Sticker>>,
+    code_to_stickers: &HashMap<String, Vec<Sticker>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Parse orders
     let orders = parse_orders(configs)?;

@@ -7,8 +7,8 @@ use regex::Regex;
 use std::sync::LazyLock;
 use std::{fs, path::Path};
 
-// use Lazy to build the regexes only once and still keep the helper functions clean
-pub static CODE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{3,})").unwrap());
+// use Lazy to build the regexes only once and keep the helper functions clean
+pub static CODE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^([\p{L}\p{N}]{3,})").unwrap());
 pub static DIMENSIONS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\d+[ХX]\d+").unwrap());
 pub static MATERIAL_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
@@ -19,13 +19,11 @@ pub static MATERIAL_RE: LazyLock<Regex> = LazyLock::new(|| {
 pub static COLOR_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)BLK|BLACK|RED|GREEN|BLUE").unwrap());
 
-pub fn extract_code(name: &str) -> Result<u64, ParseStickerError> {
+pub fn extract_code(name: &str) -> Result<String, ParseStickerError> {
     CODE_RE
         .captures(name)
         .and_then(|caps| caps.get(1))
-        .map(|m| m.as_str().parse::<u64>())
-        .transpose()
-        .map_err(|_| ParseStickerError::MissingCode(name.to_string()))?
+        .map(|m| m.as_str().to_owned())
         .ok_or_else(|| ParseStickerError::MissingCode(name.to_string()))
 }
 
@@ -51,7 +49,7 @@ pub fn extract_dimensions(end_string: &str) -> Vec<Dimensions> {
 
 pub fn extract_description(
     name_parts: (&str, &str),
-    code: u64,
+    code: &str,
 ) -> Result<String, ParseStickerError> {
     name_parts
         .0
@@ -135,7 +133,7 @@ pub fn try_infering_code_by_description_similiarity_measure(
             .filter(|(_, levenshtein)| *levenshtein >= levenshtein_distance_bound)
             .flat_map(|(i, _)| {
                 Sticker::parse_stickers(
-                    (parsed_stickers[i].code.clone().to_string() + name).as_str(),
+                    (parsed_stickers[i].code.clone().to_string() + "_" + name).as_str(),
                 )
                 .unwrap_or_default()
             })
@@ -151,8 +149,6 @@ pub fn try_infering_code_by_description_similiarity_measure(
     }
 }
 
-const EXCLUDED_PREFIX_CHARS: &[char] = &['C', 'С'];
-
 pub fn collect_cdr_prefixes(dir: &Path) -> Vec<String> {
     fn visit_dir(path: &Path, prefixes: &mut Vec<String>) {
         if let Ok(entries) = fs::read_dir(path) {
@@ -166,9 +162,7 @@ pub fn collect_cdr_prefixes(dir: &Path) -> Vec<String> {
                 {
                     if let Some(file_stem) = entry_path.file_stem().and_then(|s| s.to_str()) {
                         let upper_stem = file_stem.to_uppercase();
-                        if !upper_stem.contains("BACKUP")
-                            && !upper_stem.starts_with(EXCLUDED_PREFIX_CHARS)
-                        {
+                        if !upper_stem.contains("BACKUP") {
                             prefixes.push(upper_stem.replace(" _", "_"));
                         }
                     }

@@ -68,10 +68,10 @@ pub fn run_inferring() {
     stickers.sort_by(|a, b| a.code.cmp(&b.code));
     stickers.dedup();
 
-    let mut code_to_stickers_map: HashMap<u64, Vec<Sticker>> = HashMap::new();
+    let mut code_to_stickers_map: HashMap<String, Vec<Sticker>> = HashMap::new();
     for sticker in &stickers {
         code_to_stickers_map
-            .entry(sticker.code)
+            .entry(sticker.code.clone())
             .or_default()
             .push(sticker.clone());
     }
@@ -114,10 +114,10 @@ pub fn run_no_inferring() {
     stickers.sort_by(|a, b| a.code.cmp(&b.code));
     stickers.dedup();
 
-    let mut code_to_stickers_map: HashMap<u64, Vec<Sticker>> = HashMap::new();
+    let mut code_to_stickers_map: HashMap<String, Vec<Sticker>> = HashMap::new();
     for sticker in &stickers {
         code_to_stickers_map
-            .entry(sticker.code)
+            .entry(sticker.code.clone())
             .or_default()
             .push(sticker.clone());
     }
@@ -157,10 +157,10 @@ pub fn run_optimized() {
     stickers.sort_by(|a, b| a.code.cmp(&b.code));
     stickers.dedup();
 
-    let mut code_to_stickers_map: HashMap<u64, Vec<Sticker>> = HashMap::new();
+    let mut code_to_stickers_map: HashMap<String, Vec<Sticker>> = HashMap::new();
     for sticker in &stickers {
         code_to_stickers_map
-            .entry(sticker.code)
+            .entry(sticker.code.clone())
             .or_default()
             .push(sticker.clone());
     }

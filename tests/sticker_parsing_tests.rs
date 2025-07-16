@@ -12,7 +12,7 @@ mod tests {
     fn test_7099() {
         let s = Sticker::parse_stickers("7099_LRS_НЕЖЕН САПУН ОБОГАТЕН С МАСЛА_60X40_PVC_R (2)")
             .unwrap();
-        assert_eq!(s[0].code, 7099);
+        assert_eq!(s[0].code, "7099");
         assert_eq!(s[0].dimensions, "60x40".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -21,7 +21,7 @@ mod tests {
     #[test]
     fn test_7129() {
         let s = Sticker::parse_stickers("7129_LRS_НЕЖЕН ИЗМИВАЩ ГЕЛ БЕБЕ 80X55_PVC_R").unwrap();
-        assert_eq!(s[0].code, 7129);
+        assert_eq!(s[0].code, "7129");
         assert_eq!(s[0].dimensions, "80x55".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn test_7136() {
         let s = Sticker::parse_stickers("7136_LRS_ХИДРАТИРАЩ КРЕМ БЕБЕ_58X43_PVC_R").unwrap();
-        assert_eq!(s[0].code, 7136);
+        assert_eq!(s[0].code, "7136");
         assert_eq!(s[0].dimensions, "58x43".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -39,7 +39,7 @@ mod tests {
     #[test]
     fn test_7143() {
         let s = Sticker::parse_stickers("7143_LRS_ПОЧИСТВАЩО МЛЯКО БЕБЕ_60X110_PVC_R").unwrap();
-        assert_eq!(s[0].code, 7143);
+        assert_eq!(s[0].code, "7143");
         assert_eq!(s[0].dimensions, "60x110".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -51,7 +51,7 @@ mod tests {
             Sticker::parse_stickers("7303_LRS_SOS ВЪЗСТАНОВЯВАЩ БАЛСАМ БЕБЕ 50X30_PVC_R_TEMP_SIZE")
                 .unwrap();
         assert_eq!(s[0].dimensions, "50x30".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 7303);
+        assert_eq!(s[0].code, "7303");
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -61,7 +61,7 @@ mod tests {
         let s = Sticker::parse_stickers("7396_LRS_НЕЖЕН ИЗМИВАЩ ГЕЛ БЕБЕ ПЪЛНИТЕЛ 80X55_PVC_R")
             .unwrap();
         assert_eq!(s[0].dimensions, "80x55".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 7396);
+        assert_eq!(s[0].code, "7396");
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -70,7 +70,7 @@ mod tests {
     fn test_7624() {
         let s = Sticker::parse_stickers("7624_LRS_ПОЧИСТВАЩА ВОДА БЕБЕ_60X110_PVC_R").unwrap();
         assert_eq!(s[0].dimensions, "60x110".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 7624);
+        assert_eq!(s[0].code, "7624");
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -79,7 +79,7 @@ mod tests {
     fn test_7631() {
         let s = Sticker::parse_stickers("7631_LRS_БЕБЕШКА ПАСТА ЗА ЗЪБИ_50X30_PVC_R").unwrap();
         assert_eq!(s[0].dimensions, "50x30".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 7631);
+        assert_eq!(s[0].code, "7631");
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -88,7 +88,7 @@ mod tests {
     fn test_7860() {
         let s = Sticker::parse_stickers("7860_LR_BOX BEBE_80X55_PVC_R").unwrap();
         assert_eq!(s[0].dimensions, "80x55".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 7860);
+        assert_eq!(s[0].code, "7860");
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -99,7 +99,7 @@ mod tests {
             "205475_RF VITALFAN PROGR SINGLE 30K_58X75_36X73_PAPER GREEN_DVOEN STIKER_OK",
         )
         .unwrap();
-        assert_eq!(s[0].code, 205475);
+        assert_eq!(s[0].code, "205475");
         assert_eq!(s[0].dimensions, "58x75".parse::<Dimensions>().unwrap(),);
         assert_eq!(s[1].dimensions, "36x73".parse::<Dimensions>().unwrap(),);
         assert_eq!(s[0].material, Material::Paper);
@@ -110,7 +110,7 @@ mod tests {
     fn test_234191() {
         let s =
             Sticker::parse_stickers("234191_AV CLEAN GEL TUBE 200ML_50X50_PVC_R_OK_PF").unwrap();
-        assert_eq!(s[0].code, 234191);
+        assert_eq!(s[0].code, "234191");
         assert_eq!(s[0].dimensions, "50x50".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -120,7 +120,7 @@ mod tests {
     fn test_235354() {
         let s = Sticker::parse_stickers("235354_RF STYLE FIX GEL 150ML_45X101_PVC_R_SLV_OK_PF")
             .unwrap();
-        assert_eq!(s[0].code, 235354);
+        assert_eq!(s[0].code, "235354");
         assert_eq!(s[0].dimensions, "45x101".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCRSLV);
         assert_eq!(s[0].text_color, Color::Black);
@@ -130,7 +130,7 @@ mod tests {
     fn test_237355() {
         let s = Sticker::parse_stickers("237355_AD DERMALIB CICA CR REP 50ML_100X40_PVC_OK_PF")
             .unwrap();
-        assert_eq!(s[0].code, 237355);
+        assert_eq!(s[0].code, "237355");
         assert_eq!(s[0].dimensions, "100x40".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVC);
         assert_eq!(s[0].text_color, Color::Black);
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn test_238309() {
         let s = Sticker::parse_stickers("238309_AV TOL LOT 200ML_40X60_PVC_OK_PF").unwrap();
-        assert_eq!(s[0].code, 238309);
+        assert_eq!(s[0].code, "238309");
         assert_eq!(s[0].dimensions, "40x60".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVC);
         assert_eq!(s[0].text_color, Color::Black);
@@ -151,7 +151,7 @@ mod tests {
             Sticker::parse_stickers("239680_AD EPITHELIALE AH MASSAGE OIL 100ML_45X101_PVC_OK_PF")
                 .unwrap();
         assert_eq!(s[0].dimensions, "45x101".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 239680);
+        assert_eq!(s[0].code, "239680");
         assert_eq!(s[0].material, Material::PVC);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -162,7 +162,7 @@ mod tests {
             Sticker::parse_stickers("240198_KL MASQUE REPA CAPUACY 3IN1 150ML_60X40_PVC_R_OK_PF")
                 .unwrap();
         assert_eq!(s[0].dimensions, "60x40".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 240198);
+        assert_eq!(s[0].code, "240198");
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -171,7 +171,7 @@ mod tests {
     fn test_241438() {
         let s = Sticker::parse_stickers("241438_DU KERTYOL PSO SHP 125ML_50X100_PAPER BLUE_OK_PF")
             .unwrap();
-        assert_eq!(s[0].code, 241438);
+        assert_eq!(s[0].code, "241438");
         assert_eq!(s[0].dimensions, "50x100".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::Paper);
         assert_eq!(s[0].text_color, Color::Blue);
@@ -181,7 +181,7 @@ mod tests {
     fn test_247109() {
         let s = Sticker::parse_stickers("247109_KL SHP GALANGA 200ML_60X40_PVC_R_OK_PF").unwrap();
         assert_eq!(s[0].dimensions, "60x40".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 247109);
+        assert_eq!(s[0].code, "247109");
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -193,7 +193,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(s[0].dimensions, "40x90".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 253831);
+        assert_eq!(s[0].code, "253831");
         assert_eq!(s[0].material, Material::PaperGR);
         assert_eq!(s[0].text_color, Color::Black);
     }
@@ -201,7 +201,7 @@ mod tests {
     #[test]
     fn test_259064() {
         let s = Sticker::parse_stickers("259064_KL SHP PIVOINE 200ML_60X40_PVC_R_OK").unwrap();
-        assert_eq!(s[0].code, 259064);
+        assert_eq!(s[0].code, "259064");
         assert_eq!(s[0].dimensions, "60x40".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -211,7 +211,7 @@ mod tests {
     fn test_259839() {
         let s = Sticker::parse_stickers("259839_RF ABSOLU KERATIN CR 100ML_40X100_PAPER BLK_PF")
             .unwrap();
-        assert_eq!(s[0].code, 259839);
+        assert_eq!(s[0].code, "259839");
         assert_eq!(s[0].dimensions, "40x100".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::Paper);
         assert_eq!(s[0].text_color, Color::Black);
@@ -221,7 +221,7 @@ mod tests {
     fn test_261776() {
         let s = Sticker::parse_stickers("261776_AV HYALURON ACTIVE B3 REFILL 50ML_50X22_PVC_OK_PF")
             .unwrap();
-        assert_eq!(s[0].code, 261776);
+        assert_eq!(s[0].code, "261776");
         assert_eq!(s[0].dimensions, "50x22".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVC);
         assert_eq!(s[0].text_color, Color::Black);
@@ -231,7 +231,7 @@ mod tests {
     fn test_261783() {
         let s = Sticker::parse_stickers("261783_AV VITAMIN ACTIV CG SER 30ML_40X45_PVC_R_OK_PF")
             .unwrap();
-        assert_eq!(s[0].code, 261783);
+        assert_eq!(s[0].code, "261783");
         assert_eq!(s[0].dimensions, "40x45".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn test_261788() {
         let s = Sticker::parse_stickers("261788_AV VITAMIN ACTIV CG SERUM_27X40_PVC_PF").unwrap();
-        assert_eq!(s[0].code, 261788);
+        assert_eq!(s[0].code, "261788");
         assert_eq!(s[0].dimensions, "27x40".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVC);
         assert_eq!(s[0].text_color, Color::Black);
@@ -251,7 +251,7 @@ mod tests {
         let s =
             Sticker::parse_stickers("263673_ELGY CLINIC SENSILEAVE GEL - TUBE_40X20_PVC_R_OK_PF")
                 .unwrap();
-        assert_eq!(s[0].code, 263673);
+        assert_eq!(s[0].code, "263673");
         assert_eq!(s[0].dimensions, "40x20".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -264,7 +264,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(s[0].dimensions, "121x27".parse::<Dimensions>().unwrap());
-        assert_eq!(s[0].code, 263673);
+        assert_eq!(s[0].code, "263673");
         assert_eq!(s[0].material, Material::Paper);
         assert_eq!(s[0].text_color, Color::Blue);
     }
@@ -272,7 +272,7 @@ mod tests {
     #[test]
     fn test_267995() {
         let s = Sticker::parse_stickers("267995_AV SOL SPRAY 50 200ML_50X50_PVC_R_OK").unwrap();
-        assert_eq!(s[0].code, 267995);
+        assert_eq!(s[0].code, "267995");
         assert_eq!(s[0].dimensions, "50x50".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -281,7 +281,7 @@ mod tests {
     #[test]
     fn test_270402() {
         let s = Sticker::parse_stickers("270402_RF VOLUMEA SHP 200ML_100X40_PAPER GREEN").unwrap();
-        assert_eq!(s[0].code, 270402);
+        assert_eq!(s[0].code, "270402");
         assert_eq!(s[0].dimensions, "100x40".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::Paper);
         assert_eq!(s[0].text_color, Color::Green);
@@ -290,7 +290,7 @@ mod tests {
     #[test]
     fn test_270983() {
         let s = Sticker::parse_stickers("270983_KL SHP MENTHE 200ML_60X40_PVC_R").unwrap();
-        assert_eq!(s[0].code, 270983);
+        assert_eq!(s[0].code, "270983");
         assert_eq!(s[0].dimensions, "60x40".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -299,7 +299,7 @@ mod tests {
     #[test]
     fn test_273656() {
         let s = Sticker::parse_stickers("273656_DU MELAS FL INVISIBLE 30ML_40X60_PVC").unwrap();
-        assert_eq!(s[0].code, 273656);
+        assert_eq!(s[0].code, "273656");
         assert_eq!(s[0].dimensions, "40x60".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVC);
         assert_eq!(s[0].text_color, Color::Black);
@@ -309,7 +309,7 @@ mod tests {
     fn test_269226() {
         let s = Sticker::parse_stickers("269226_ULTRA FLUIDE_RADIANCE_80X25_PVC_REGULJAREN_OK")
             .unwrap();
-        assert_eq!(s[0].code, 269226);
+        assert_eq!(s[0].code, "269226");
         assert_eq!(s[0].dimensions, "80x25".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVC);
         assert_eq!(s[0].text_color, Color::Black);
@@ -319,7 +319,7 @@ mod tests {
     fn test_268175() {
         let s = Sticker::parse_stickers("268175_DU KELUAL SQUANORM OILY SHP 200ML_50X30_PVC-R")
             .unwrap();
-        assert_eq!(s[0].code, 268175);
+        assert_eq!(s[0].code, "268175");
         assert_eq!(s[0].dimensions, "50x30".parse::<Dimensions>().unwrap());
         assert_eq!(s[0].material, Material::PVCR);
         assert_eq!(s[0].text_color, Color::Black);
@@ -336,7 +336,7 @@ mod tests {
     ).into_iter().flat_map(|stickers| stickers.unwrap()).collect();
 
         for (i, s) in stickers.into_iter().enumerate() {
-            assert_eq!(s.code, 205475);
+            assert_eq!(s.code, "205475");
             println!("{s:?}");
 
             match i {
@@ -365,7 +365,7 @@ mod tests {
         let result =
             parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap()[0].code, 234191);
+        assert_eq!(result.unwrap()[0].code, "234191");
     }
 
     #[test]
@@ -381,7 +381,7 @@ mod tests {
         let result =
             parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap()[0].code, 234191);
+        assert_eq!(result.unwrap()[0].code, "234191");
     }
 
     #[test]
@@ -397,7 +397,7 @@ mod tests {
         let result =
             parser::try_infering_code_by_description_similiarity_measure(&error, &existing, 0.93);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap()[0].code, 234191);
+        assert_eq!(result.unwrap()[0].code, "234191");
     }
 
     #[test]

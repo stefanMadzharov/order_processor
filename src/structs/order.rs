@@ -1,6 +1,6 @@
 #[derive(Debug, Clone)]
 pub struct Order {
-    pub code: u64,
+    pub code: String,
     pub amount: u64,
     pub description: String,
 }

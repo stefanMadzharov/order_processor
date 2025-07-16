@@ -8,7 +8,7 @@ use crate::parser::{
 
 #[derive(Debug, Clone, Eq)]
 pub struct Sticker {
-    pub code: u64,
+    pub code: String,
     pub description: String,
     pub dimensions: Dimensions,
     pub material: Material,
@@ -18,7 +18,7 @@ pub struct Sticker {
 
 impl Sticker {
     pub fn new(
-        code: u64,
+        code: String,
         description: &str,
         dimensions: Dimensions,
         material: Material,
@@ -37,8 +37,9 @@ impl Sticker {
 
     pub fn parse_stickers(name: &str) -> Result<Vec<Self>, ParseStickerError> {
         let code = extract_code(name)?;
+        println!("{}", code);
         let name_parts = split_at_dimensions(name)?; // before and after first WxH
-        let description = extract_description(name_parts, code)?;
+        let description = extract_description(name_parts, code.as_str())?;
         let dimensions = extract_dimensions(name_parts.1);
         let materials: Vec<Material> = DIMENSIONS_RE
             .split(name_parts.1)
@@ -60,7 +61,7 @@ impl Sticker {
             })
             .map(|(dimensions, material)| {
                 Self::new(
-                    code,
+                    code.clone(),
                     &description,
                     dimensions,
                     material,

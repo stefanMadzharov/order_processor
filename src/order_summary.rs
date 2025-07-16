@@ -15,7 +15,7 @@ fn group_material(material: &Material) -> &'static str {
 
 pub fn generate_material_report_for_orders(
     configs: &Configs,
-    code_to_stickers_map: &HashMap<u64, Vec<Sticker>>,
+    code_to_stickers_map: &HashMap<String, Vec<Sticker>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let orders = parse_orders(configs)?;
     let mut counts: HashMap<(String, Dimensions), u64> = HashMap::new();
